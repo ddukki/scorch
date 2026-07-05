@@ -25,8 +25,6 @@ func (c *Str) AppendArr(v []string) { c.Data = append(c.Data, v...) }
 
 func (c *Str) Row(i int) string { return c.Data[i] }
 
-func (c *Str) DataUnsafe() []string { return c.Data }
-
 func (c *Str) DecodeColumn(r *proto.Reader, rows int) error {
 	if rows == 0 {
 		c.Data = c.Data[:0]

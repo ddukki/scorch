@@ -44,10 +44,12 @@ func TestBaseRoundTrip(t *testing.T) {
 	t.Run("int32", func(t *testing.T) { roundTrip(t, NewBase[int32]("v"), []int32{math.MinInt32, 0, math.MaxInt32}) })
 	t.Run("int64", func(t *testing.T) { roundTrip(t, NewBase[int64]("v"), []int64{math.MinInt64, 0, math.MaxInt64}) })
 	t.Run("float32", func(t *testing.T) { roundTrip(t, NewBase[float32]("v"), []float32{0, 3.14, -2.5, math.MaxFloat32}) })
-	t.Run("float64", func(t *testing.T) { roundTrip(t, NewBase[float64]("v"), []float64{0, 3.14159265359, -2.5, math.MaxFloat64}) })
+	t.Run("float64", func(t *testing.T) {
+		roundTrip(t, NewBase[float64]("v"), []float64{0, 3.14159265359, -2.5, math.MaxFloat64})
+	})
 }
 
-func TestBaseDataUnsafe(t *testing.T) {
+func TestBaseData(t *testing.T) {
 	col := NewBase[uint64]("id")
 	col.Append(10)
 	col.Append(20)
@@ -67,12 +69,12 @@ func TestBaseDataUnsafe(t *testing.T) {
 		t.Fatalf("len: got %d, want 3", got.Len())
 	}
 
-	du := got.DataUnsafe()
+	du := got.Data
 	if len(du) != 3 {
-		t.Fatalf("DataUnsafe len: got %d, want 3", len(du))
+		t.Fatalf("Data len: got %d, want 3", len(du))
 	}
 	if du[0] != got.Row(0) || du[1] != got.Row(1) || du[2] != got.Row(2) {
-		t.Fatal("DataUnsafe values differ from Row")
+		t.Fatal("Data values differ from Row")
 	}
 }
 
@@ -96,7 +98,10 @@ func TestStrRoundTrip(t *testing.T) {
 		t.Fatalf("len: got %d, want 3", got.Len())
 	}
 
-	cases := []struct{ i int; want string }{
+	cases := []struct {
+		i    int
+		want string
+	}{
 		{0, "hello"},
 		{1, ""},
 		{2, "world"},

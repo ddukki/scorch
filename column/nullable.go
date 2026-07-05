@@ -41,13 +41,6 @@ func (c *Nullable[T]) Row(i int) (T, bool) {
 	return c.Values.Row(i), c.Nulls[i]
 }
 
-func (c *Nullable[T]) DataUnsafe() []T {
-	if du, ok := c.Values.(interface{ DataUnsafe() []T }); ok {
-		return du.DataUnsafe()
-	}
-	return nil
-}
-
 func (c *Nullable[T]) DecodeColumn(r *proto.Reader, rows int) error {
 	c.Nulls = make([]bool, rows)
 	for i := 0; i < rows; i++ {

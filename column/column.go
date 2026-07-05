@@ -1,9 +1,8 @@
 package column
 
 import (
-	"unsafe"
-
 	"github.com/ClickHouse/ch-go/proto"
+	"unsafe"
 )
 
 type Column interface {
@@ -40,8 +39,6 @@ func (c *Base[T]) AppendArr(v []T) { c.Data = append(c.Data, v...) }
 
 func (c *Base[T]) Row(i int) T { return c.Data[i] }
 
-func (c *Base[T]) DataUnsafe() []T { return c.Data }
-
 func (c *Base[T]) Type() proto.ColumnType {
 	var zero T
 	switch any(zero).(type) {
@@ -71,20 +68,15 @@ func (c *Base[T]) Type() proto.ColumnType {
 }
 
 func (c *Base[T]) DecodeColumn(r *proto.Reader, rows int) error {
+	var zero T
+	n := rows * int(unsafe.Sizeof(zero))
 	if rows == 0 {
 		c.Data = c.Data[:0]
 		return nil
 	}
-	var zero T
-	n := rows * int(unsafe.Sizeof(zero))
-	data, err := r.ReadRaw(n)
-	if err != nil {
-		return err
-	}
-	src := unsafe.Slice((*T)(unsafe.Pointer(&data[0])), rows)
 	c.Data = make([]T, rows)
-	copy(c.Data, src)
-	return nil
+	raw := unsafe.Slice((*byte)(unsafe.Pointer(&c.Data[0])), n)
+	return r.ReadFull(raw)
 }
 
 func (c *Base[T]) EncodeColumn(b *proto.Buffer) error {

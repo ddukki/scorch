@@ -49,14 +49,22 @@ func (t *Tuple2[T1, T2]) Row(i int) Tuple2Value[T1, T2] {
 }
 
 func (t *Tuple2[T1, T2]) DecodeColumn(r *proto.Reader, rows int) error {
-	if err := t.Field1.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field2.DecodeColumn(r, rows); err != nil { return err }
+	if err := t.Field1.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field2.DecodeColumn(r, rows); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (t *Tuple2[T1, T2]) EncodeColumn(b *proto.Buffer) error {
-	if err := t.Field1.EncodeColumn(b); err != nil { return err }
-	if err := t.Field2.EncodeColumn(b); err != nil { return err }
+	if err := t.Field1.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field2.EncodeColumn(b); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -109,16 +117,28 @@ func (t *Tuple3[T1, T2, T3]) Row(i int) Tuple3Value[T1, T2, T3] {
 }
 
 func (t *Tuple3[T1, T2, T3]) DecodeColumn(r *proto.Reader, rows int) error {
-	if err := t.Field1.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field2.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field3.DecodeColumn(r, rows); err != nil { return err }
+	if err := t.Field1.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field2.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field3.DecodeColumn(r, rows); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (t *Tuple3[T1, T2, T3]) EncodeColumn(b *proto.Buffer) error {
-	if err := t.Field1.EncodeColumn(b); err != nil { return err }
-	if err := t.Field2.EncodeColumn(b); err != nil { return err }
-	if err := t.Field3.EncodeColumn(b); err != nil { return err }
+	if err := t.Field1.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field2.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field3.EncodeColumn(b); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -176,18 +196,34 @@ func (t *Tuple4[T1, T2, T3, T4]) Row(i int) Tuple4Value[T1, T2, T3, T4] {
 }
 
 func (t *Tuple4[T1, T2, T3, T4]) DecodeColumn(r *proto.Reader, rows int) error {
-	if err := t.Field1.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field2.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field3.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field4.DecodeColumn(r, rows); err != nil { return err }
+	if err := t.Field1.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field2.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field3.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field4.DecodeColumn(r, rows); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (t *Tuple4[T1, T2, T3, T4]) EncodeColumn(b *proto.Buffer) error {
-	if err := t.Field1.EncodeColumn(b); err != nil { return err }
-	if err := t.Field2.EncodeColumn(b); err != nil { return err }
-	if err := t.Field3.EncodeColumn(b); err != nil { return err }
-	if err := t.Field4.EncodeColumn(b); err != nil { return err }
+	if err := t.Field1.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field2.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field3.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field4.EncodeColumn(b); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -250,20 +286,40 @@ func (t *Tuple5[T1, T2, T3, T4, T5]) Row(i int) Tuple5Value[T1, T2, T3, T4, T5] 
 }
 
 func (t *Tuple5[T1, T2, T3, T4, T5]) DecodeColumn(r *proto.Reader, rows int) error {
-	if err := t.Field1.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field2.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field3.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field4.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field5.DecodeColumn(r, rows); err != nil { return err }
+	if err := t.Field1.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field2.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field3.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field4.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field5.DecodeColumn(r, rows); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (t *Tuple5[T1, T2, T3, T4, T5]) EncodeColumn(b *proto.Buffer) error {
-	if err := t.Field1.EncodeColumn(b); err != nil { return err }
-	if err := t.Field2.EncodeColumn(b); err != nil { return err }
-	if err := t.Field3.EncodeColumn(b); err != nil { return err }
-	if err := t.Field4.EncodeColumn(b); err != nil { return err }
-	if err := t.Field5.EncodeColumn(b); err != nil { return err }
+	if err := t.Field1.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field2.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field3.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field4.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field5.EncodeColumn(b); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -331,22 +387,46 @@ func (t *Tuple6[T1, T2, T3, T4, T5, T6]) Row(i int) Tuple6Value[T1, T2, T3, T4, 
 }
 
 func (t *Tuple6[T1, T2, T3, T4, T5, T6]) DecodeColumn(r *proto.Reader, rows int) error {
-	if err := t.Field1.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field2.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field3.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field4.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field5.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field6.DecodeColumn(r, rows); err != nil { return err }
+	if err := t.Field1.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field2.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field3.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field4.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field5.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field6.DecodeColumn(r, rows); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (t *Tuple6[T1, T2, T3, T4, T5, T6]) EncodeColumn(b *proto.Buffer) error {
-	if err := t.Field1.EncodeColumn(b); err != nil { return err }
-	if err := t.Field2.EncodeColumn(b); err != nil { return err }
-	if err := t.Field3.EncodeColumn(b); err != nil { return err }
-	if err := t.Field4.EncodeColumn(b); err != nil { return err }
-	if err := t.Field5.EncodeColumn(b); err != nil { return err }
-	if err := t.Field6.EncodeColumn(b); err != nil { return err }
+	if err := t.Field1.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field2.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field3.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field4.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field5.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field6.EncodeColumn(b); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -419,24 +499,52 @@ func (t *Tuple7[T1, T2, T3, T4, T5, T6, T7]) Row(i int) Tuple7Value[T1, T2, T3, 
 }
 
 func (t *Tuple7[T1, T2, T3, T4, T5, T6, T7]) DecodeColumn(r *proto.Reader, rows int) error {
-	if err := t.Field1.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field2.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field3.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field4.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field5.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field6.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field7.DecodeColumn(r, rows); err != nil { return err }
+	if err := t.Field1.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field2.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field3.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field4.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field5.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field6.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field7.DecodeColumn(r, rows); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (t *Tuple7[T1, T2, T3, T4, T5, T6, T7]) EncodeColumn(b *proto.Buffer) error {
-	if err := t.Field1.EncodeColumn(b); err != nil { return err }
-	if err := t.Field2.EncodeColumn(b); err != nil { return err }
-	if err := t.Field3.EncodeColumn(b); err != nil { return err }
-	if err := t.Field4.EncodeColumn(b); err != nil { return err }
-	if err := t.Field5.EncodeColumn(b); err != nil { return err }
-	if err := t.Field6.EncodeColumn(b); err != nil { return err }
-	if err := t.Field7.EncodeColumn(b); err != nil { return err }
+	if err := t.Field1.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field2.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field3.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field4.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field5.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field6.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field7.EncodeColumn(b); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -514,26 +622,58 @@ func (t *Tuple8[T1, T2, T3, T4, T5, T6, T7, T8]) Row(i int) Tuple8Value[T1, T2, 
 }
 
 func (t *Tuple8[T1, T2, T3, T4, T5, T6, T7, T8]) DecodeColumn(r *proto.Reader, rows int) error {
-	if err := t.Field1.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field2.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field3.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field4.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field5.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field6.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field7.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field8.DecodeColumn(r, rows); err != nil { return err }
+	if err := t.Field1.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field2.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field3.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field4.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field5.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field6.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field7.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field8.DecodeColumn(r, rows); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (t *Tuple8[T1, T2, T3, T4, T5, T6, T7, T8]) EncodeColumn(b *proto.Buffer) error {
-	if err := t.Field1.EncodeColumn(b); err != nil { return err }
-	if err := t.Field2.EncodeColumn(b); err != nil { return err }
-	if err := t.Field3.EncodeColumn(b); err != nil { return err }
-	if err := t.Field4.EncodeColumn(b); err != nil { return err }
-	if err := t.Field5.EncodeColumn(b); err != nil { return err }
-	if err := t.Field6.EncodeColumn(b); err != nil { return err }
-	if err := t.Field7.EncodeColumn(b); err != nil { return err }
-	if err := t.Field8.EncodeColumn(b); err != nil { return err }
+	if err := t.Field1.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field2.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field3.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field4.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field5.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field6.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field7.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field8.EncodeColumn(b); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -616,68 +756,104 @@ func (t *Tuple9[T1, T2, T3, T4, T5, T6, T7, T8, T9]) Row(i int) Tuple9Value[T1, 
 }
 
 func (t *Tuple9[T1, T2, T3, T4, T5, T6, T7, T8, T9]) DecodeColumn(r *proto.Reader, rows int) error {
-	if err := t.Field1.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field2.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field3.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field4.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field5.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field6.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field7.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field8.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field9.DecodeColumn(r, rows); err != nil { return err }
+	if err := t.Field1.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field2.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field3.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field4.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field5.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field6.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field7.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field8.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field9.DecodeColumn(r, rows); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (t *Tuple9[T1, T2, T3, T4, T5, T6, T7, T8, T9]) EncodeColumn(b *proto.Buffer) error {
-	if err := t.Field1.EncodeColumn(b); err != nil { return err }
-	if err := t.Field2.EncodeColumn(b); err != nil { return err }
-	if err := t.Field3.EncodeColumn(b); err != nil { return err }
-	if err := t.Field4.EncodeColumn(b); err != nil { return err }
-	if err := t.Field5.EncodeColumn(b); err != nil { return err }
-	if err := t.Field6.EncodeColumn(b); err != nil { return err }
-	if err := t.Field7.EncodeColumn(b); err != nil { return err }
-	if err := t.Field8.EncodeColumn(b); err != nil { return err }
-	if err := t.Field9.EncodeColumn(b); err != nil { return err }
+	if err := t.Field1.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field2.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field3.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field4.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field5.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field6.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field7.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field8.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field9.EncodeColumn(b); err != nil {
+		return err
+	}
 	return nil
 }
 
 type Tuple10Value[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10 any] struct {
-	T1 T1
-	T2 T2
-	T3 T3
-	T4 T4
-	T5 T5
-	T6 T6
-	T7 T7
-	T8 T8
-	T9 T9
+	T1  T1
+	T2  T2
+	T3  T3
+	T4  T4
+	T5  T5
+	T6  T6
+	T7  T7
+	T8  T8
+	T9  T9
 	T10 T10
 }
 
 type Tuple10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10 any] struct {
-	Field1 ColumnOf[T1]
-	Field2 ColumnOf[T2]
-	Field3 ColumnOf[T3]
-	Field4 ColumnOf[T4]
-	Field5 ColumnOf[T5]
-	Field6 ColumnOf[T6]
-	Field7 ColumnOf[T7]
-	Field8 ColumnOf[T8]
-	Field9 ColumnOf[T9]
+	Field1  ColumnOf[T1]
+	Field2  ColumnOf[T2]
+	Field3  ColumnOf[T3]
+	Field4  ColumnOf[T4]
+	Field5  ColumnOf[T5]
+	Field6  ColumnOf[T6]
+	Field7  ColumnOf[T7]
+	Field8  ColumnOf[T8]
+	Field9  ColumnOf[T9]
 	Field10 ColumnOf[T10]
 }
 
 func NewTuple10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10 any](col1 ColumnOf[T1], col2 ColumnOf[T2], col3 ColumnOf[T3], col4 ColumnOf[T4], col5 ColumnOf[T5], col6 ColumnOf[T6], col7 ColumnOf[T7], col8 ColumnOf[T8], col9 ColumnOf[T9], col10 ColumnOf[T10]) *Tuple10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10] {
 	return &Tuple10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]{
-		Field1: col1,
-		Field2: col2,
-		Field3: col3,
-		Field4: col4,
-		Field5: col5,
-		Field6: col6,
-		Field7: col7,
-		Field8: col8,
-		Field9: col9,
+		Field1:  col1,
+		Field2:  col2,
+		Field3:  col3,
+		Field4:  col4,
+		Field5:  col5,
+		Field6:  col6,
+		Field7:  col7,
+		Field8:  col8,
+		Field9:  col9,
 		Field10: col10,
 	}
 }
@@ -711,86 +887,126 @@ func (t *Tuple10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) AppendArr(v []Tuple10
 
 func (t *Tuple10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) Row(i int) Tuple10Value[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10] {
 	return Tuple10Value[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]{
-		T1: t.Field1.Row(i),
-		T2: t.Field2.Row(i),
-		T3: t.Field3.Row(i),
-		T4: t.Field4.Row(i),
-		T5: t.Field5.Row(i),
-		T6: t.Field6.Row(i),
-		T7: t.Field7.Row(i),
-		T8: t.Field8.Row(i),
-		T9: t.Field9.Row(i),
+		T1:  t.Field1.Row(i),
+		T2:  t.Field2.Row(i),
+		T3:  t.Field3.Row(i),
+		T4:  t.Field4.Row(i),
+		T5:  t.Field5.Row(i),
+		T6:  t.Field6.Row(i),
+		T7:  t.Field7.Row(i),
+		T8:  t.Field8.Row(i),
+		T9:  t.Field9.Row(i),
 		T10: t.Field10.Row(i),
 	}
 }
 
 func (t *Tuple10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) DecodeColumn(r *proto.Reader, rows int) error {
-	if err := t.Field1.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field2.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field3.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field4.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field5.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field6.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field7.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field8.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field9.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field10.DecodeColumn(r, rows); err != nil { return err }
+	if err := t.Field1.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field2.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field3.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field4.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field5.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field6.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field7.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field8.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field9.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field10.DecodeColumn(r, rows); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (t *Tuple10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]) EncodeColumn(b *proto.Buffer) error {
-	if err := t.Field1.EncodeColumn(b); err != nil { return err }
-	if err := t.Field2.EncodeColumn(b); err != nil { return err }
-	if err := t.Field3.EncodeColumn(b); err != nil { return err }
-	if err := t.Field4.EncodeColumn(b); err != nil { return err }
-	if err := t.Field5.EncodeColumn(b); err != nil { return err }
-	if err := t.Field6.EncodeColumn(b); err != nil { return err }
-	if err := t.Field7.EncodeColumn(b); err != nil { return err }
-	if err := t.Field8.EncodeColumn(b); err != nil { return err }
-	if err := t.Field9.EncodeColumn(b); err != nil { return err }
-	if err := t.Field10.EncodeColumn(b); err != nil { return err }
+	if err := t.Field1.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field2.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field3.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field4.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field5.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field6.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field7.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field8.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field9.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field10.EncodeColumn(b); err != nil {
+		return err
+	}
 	return nil
 }
 
 type Tuple11Value[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11 any] struct {
-	T1 T1
-	T2 T2
-	T3 T3
-	T4 T4
-	T5 T5
-	T6 T6
-	T7 T7
-	T8 T8
-	T9 T9
+	T1  T1
+	T2  T2
+	T3  T3
+	T4  T4
+	T5  T5
+	T6  T6
+	T7  T7
+	T8  T8
+	T9  T9
 	T10 T10
 	T11 T11
 }
 
 type Tuple11[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11 any] struct {
-	Field1 ColumnOf[T1]
-	Field2 ColumnOf[T2]
-	Field3 ColumnOf[T3]
-	Field4 ColumnOf[T4]
-	Field5 ColumnOf[T5]
-	Field6 ColumnOf[T6]
-	Field7 ColumnOf[T7]
-	Field8 ColumnOf[T8]
-	Field9 ColumnOf[T9]
+	Field1  ColumnOf[T1]
+	Field2  ColumnOf[T2]
+	Field3  ColumnOf[T3]
+	Field4  ColumnOf[T4]
+	Field5  ColumnOf[T5]
+	Field6  ColumnOf[T6]
+	Field7  ColumnOf[T7]
+	Field8  ColumnOf[T8]
+	Field9  ColumnOf[T9]
 	Field10 ColumnOf[T10]
 	Field11 ColumnOf[T11]
 }
 
 func NewTuple11[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11 any](col1 ColumnOf[T1], col2 ColumnOf[T2], col3 ColumnOf[T3], col4 ColumnOf[T4], col5 ColumnOf[T5], col6 ColumnOf[T6], col7 ColumnOf[T7], col8 ColumnOf[T8], col9 ColumnOf[T9], col10 ColumnOf[T10], col11 ColumnOf[T11]) *Tuple11[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11] {
 	return &Tuple11[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11]{
-		Field1: col1,
-		Field2: col2,
-		Field3: col3,
-		Field4: col4,
-		Field5: col5,
-		Field6: col6,
-		Field7: col7,
-		Field8: col8,
-		Field9: col9,
+		Field1:  col1,
+		Field2:  col2,
+		Field3:  col3,
+		Field4:  col4,
+		Field5:  col5,
+		Field6:  col6,
+		Field7:  col7,
+		Field8:  col8,
+		Field9:  col9,
 		Field10: col10,
 		Field11: col11,
 	}
@@ -826,75 +1042,119 @@ func (t *Tuple11[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11]) AppendArr(v []Tu
 
 func (t *Tuple11[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11]) Row(i int) Tuple11Value[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11] {
 	return Tuple11Value[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11]{
-		T1: t.Field1.Row(i),
-		T2: t.Field2.Row(i),
-		T3: t.Field3.Row(i),
-		T4: t.Field4.Row(i),
-		T5: t.Field5.Row(i),
-		T6: t.Field6.Row(i),
-		T7: t.Field7.Row(i),
-		T8: t.Field8.Row(i),
-		T9: t.Field9.Row(i),
+		T1:  t.Field1.Row(i),
+		T2:  t.Field2.Row(i),
+		T3:  t.Field3.Row(i),
+		T4:  t.Field4.Row(i),
+		T5:  t.Field5.Row(i),
+		T6:  t.Field6.Row(i),
+		T7:  t.Field7.Row(i),
+		T8:  t.Field8.Row(i),
+		T9:  t.Field9.Row(i),
 		T10: t.Field10.Row(i),
 		T11: t.Field11.Row(i),
 	}
 }
 
 func (t *Tuple11[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11]) DecodeColumn(r *proto.Reader, rows int) error {
-	if err := t.Field1.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field2.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field3.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field4.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field5.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field6.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field7.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field8.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field9.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field10.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field11.DecodeColumn(r, rows); err != nil { return err }
+	if err := t.Field1.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field2.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field3.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field4.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field5.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field6.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field7.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field8.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field9.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field10.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field11.DecodeColumn(r, rows); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (t *Tuple11[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11]) EncodeColumn(b *proto.Buffer) error {
-	if err := t.Field1.EncodeColumn(b); err != nil { return err }
-	if err := t.Field2.EncodeColumn(b); err != nil { return err }
-	if err := t.Field3.EncodeColumn(b); err != nil { return err }
-	if err := t.Field4.EncodeColumn(b); err != nil { return err }
-	if err := t.Field5.EncodeColumn(b); err != nil { return err }
-	if err := t.Field6.EncodeColumn(b); err != nil { return err }
-	if err := t.Field7.EncodeColumn(b); err != nil { return err }
-	if err := t.Field8.EncodeColumn(b); err != nil { return err }
-	if err := t.Field9.EncodeColumn(b); err != nil { return err }
-	if err := t.Field10.EncodeColumn(b); err != nil { return err }
-	if err := t.Field11.EncodeColumn(b); err != nil { return err }
+	if err := t.Field1.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field2.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field3.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field4.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field5.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field6.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field7.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field8.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field9.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field10.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field11.EncodeColumn(b); err != nil {
+		return err
+	}
 	return nil
 }
 
 type Tuple12Value[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12 any] struct {
-	T1 T1
-	T2 T2
-	T3 T3
-	T4 T4
-	T5 T5
-	T6 T6
-	T7 T7
-	T8 T8
-	T9 T9
+	T1  T1
+	T2  T2
+	T3  T3
+	T4  T4
+	T5  T5
+	T6  T6
+	T7  T7
+	T8  T8
+	T9  T9
 	T10 T10
 	T11 T11
 	T12 T12
 }
 
 type Tuple12[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12 any] struct {
-	Field1 ColumnOf[T1]
-	Field2 ColumnOf[T2]
-	Field3 ColumnOf[T3]
-	Field4 ColumnOf[T4]
-	Field5 ColumnOf[T5]
-	Field6 ColumnOf[T6]
-	Field7 ColumnOf[T7]
-	Field8 ColumnOf[T8]
-	Field9 ColumnOf[T9]
+	Field1  ColumnOf[T1]
+	Field2  ColumnOf[T2]
+	Field3  ColumnOf[T3]
+	Field4  ColumnOf[T4]
+	Field5  ColumnOf[T5]
+	Field6  ColumnOf[T6]
+	Field7  ColumnOf[T7]
+	Field8  ColumnOf[T8]
+	Field9  ColumnOf[T9]
 	Field10 ColumnOf[T10]
 	Field11 ColumnOf[T11]
 	Field12 ColumnOf[T12]
@@ -902,15 +1162,15 @@ type Tuple12[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12 any] struct {
 
 func NewTuple12[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12 any](col1 ColumnOf[T1], col2 ColumnOf[T2], col3 ColumnOf[T3], col4 ColumnOf[T4], col5 ColumnOf[T5], col6 ColumnOf[T6], col7 ColumnOf[T7], col8 ColumnOf[T8], col9 ColumnOf[T9], col10 ColumnOf[T10], col11 ColumnOf[T11], col12 ColumnOf[T12]) *Tuple12[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12] {
 	return &Tuple12[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12]{
-		Field1: col1,
-		Field2: col2,
-		Field3: col3,
-		Field4: col4,
-		Field5: col5,
-		Field6: col6,
-		Field7: col7,
-		Field8: col8,
-		Field9: col9,
+		Field1:  col1,
+		Field2:  col2,
+		Field3:  col3,
+		Field4:  col4,
+		Field5:  col5,
+		Field6:  col6,
+		Field7:  col7,
+		Field8:  col8,
+		Field9:  col9,
 		Field10: col10,
 		Field11: col11,
 		Field12: col12,
@@ -948,15 +1208,15 @@ func (t *Tuple12[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12]) AppendArr(v
 
 func (t *Tuple12[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12]) Row(i int) Tuple12Value[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12] {
 	return Tuple12Value[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12]{
-		T1: t.Field1.Row(i),
-		T2: t.Field2.Row(i),
-		T3: t.Field3.Row(i),
-		T4: t.Field4.Row(i),
-		T5: t.Field5.Row(i),
-		T6: t.Field6.Row(i),
-		T7: t.Field7.Row(i),
-		T8: t.Field8.Row(i),
-		T9: t.Field9.Row(i),
+		T1:  t.Field1.Row(i),
+		T2:  t.Field2.Row(i),
+		T3:  t.Field3.Row(i),
+		T4:  t.Field4.Row(i),
+		T5:  t.Field5.Row(i),
+		T6:  t.Field6.Row(i),
+		T7:  t.Field7.Row(i),
+		T8:  t.Field8.Row(i),
+		T9:  t.Field9.Row(i),
 		T10: t.Field10.Row(i),
 		T11: t.Field11.Row(i),
 		T12: t.Field12.Row(i),
@@ -964,34 +1224,81 @@ func (t *Tuple12[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12]) Row(i int) 
 }
 
 func (t *Tuple12[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12]) DecodeColumn(r *proto.Reader, rows int) error {
-	if err := t.Field1.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field2.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field3.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field4.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field5.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field6.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field7.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field8.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field9.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field10.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field11.DecodeColumn(r, rows); err != nil { return err }
-	if err := t.Field12.DecodeColumn(r, rows); err != nil { return err }
+	if err := t.Field1.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field2.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field3.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field4.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field5.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field6.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field7.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field8.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field9.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field10.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field11.DecodeColumn(r, rows); err != nil {
+		return err
+	}
+	if err := t.Field12.DecodeColumn(r, rows); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (t *Tuple12[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12]) EncodeColumn(b *proto.Buffer) error {
-	if err := t.Field1.EncodeColumn(b); err != nil { return err }
-	if err := t.Field2.EncodeColumn(b); err != nil { return err }
-	if err := t.Field3.EncodeColumn(b); err != nil { return err }
-	if err := t.Field4.EncodeColumn(b); err != nil { return err }
-	if err := t.Field5.EncodeColumn(b); err != nil { return err }
-	if err := t.Field6.EncodeColumn(b); err != nil { return err }
-	if err := t.Field7.EncodeColumn(b); err != nil { return err }
-	if err := t.Field8.EncodeColumn(b); err != nil { return err }
-	if err := t.Field9.EncodeColumn(b); err != nil { return err }
-	if err := t.Field10.EncodeColumn(b); err != nil { return err }
-	if err := t.Field11.EncodeColumn(b); err != nil { return err }
-	if err := t.Field12.EncodeColumn(b); err != nil { return err }
+	if err := t.Field1.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field2.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field3.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field4.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field5.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field6.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field7.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field8.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field9.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field10.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field11.EncodeColumn(b); err != nil {
+		return err
+	}
+	if err := t.Field12.EncodeColumn(b); err != nil {
+		return err
+	}
 	return nil
 }
-
