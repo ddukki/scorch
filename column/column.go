@@ -81,7 +81,9 @@ func (c *Base[T]) DecodeColumn(r *proto.Reader, rows int) error {
 	if err != nil {
 		return err
 	}
-	c.Data = unsafe.Slice((*T)(unsafe.Pointer(&data[0])), rows)
+	src := unsafe.Slice((*T)(unsafe.Pointer(&data[0])), rows)
+	c.Data = make([]T, rows)
+	copy(c.Data, src)
 	return nil
 }
 
