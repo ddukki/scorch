@@ -7,6 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"io"
+	"log"
+
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
@@ -14,7 +17,7 @@ import (
 func TestMain(m *testing.M) {
 	ctx := context.Background()
 	req := testcontainers.ContainerRequest{
-		Image:        "clickhouse/clickhouse-server:24.3",
+		Image:        "clickhouse/clickhouse-server:26.6",
 		ExposedPorts: []string{"9000/tcp"},
 		WaitingFor:   wait.ForLog("Ready for connections"),
 	}
@@ -27,6 +30,12 @@ func TestMain(m *testing.M) {
 		os.Exit(m.Run())
 	}
 	defer ch.Terminate(ctx)
+
+	// Log ClickHouse version for test output traceability.
+	if code, r, err := ch.Exec(ctx, []string{"clickhouse-server", "--version"}); err == nil && code == 0 {
+		b, _ := io.ReadAll(r)
+		log.Printf("ClickHouse: %s", string(b))
+	}
 
 	addr, err := ch.Endpoint(ctx, "")
 	if err != nil {

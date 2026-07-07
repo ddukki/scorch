@@ -1,0 +1,15 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "regexManagers": [
+    {
+      "description": "Update ClickHouse server image tag used in E2E testcontainers tests",
+      "fileMatch": ["conn/conn_e2e_test\\.go"],
+      "matchStrings": [
+        "clickhouse/clickhouse-server:(?<currentValue>\\d+\\.\\d+)"
+      ],
+      "depNameTemplate": "clickhouse/clickhouse-server",
+      "datasourceTemplate": "docker"
+    }
+  ]
+}
