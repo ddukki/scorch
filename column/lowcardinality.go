@@ -2,6 +2,7 @@ package column
 
 import (
 	"encoding/binary"
+	"fmt"
 	"math"
 	"unsafe"
 
@@ -30,6 +31,9 @@ func (c *LowCardinality[T]) DecodeColumn(r *proto.Reader, rows int) error {
 	if rows == 0 {
 		return nil
 	}
+	if rows > 100_000_000 || rows < 0 {
+		return fmt.Errorf("rows %d out of range", rows)
+	}
 	// serialization version byte
 	if _, err := r.ReadByte(); err != nil {
 		return err
@@ -38,6 +42,9 @@ func (c *LowCardinality[T]) DecodeColumn(r *proto.Reader, rows int) error {
 	keyCount, err := r.Int()
 	if err != nil {
 		return err
+	}
+	if keyCount > 100_000_000 || keyCount < 0 {
+		return fmt.Errorf("key count %d out of range", keyCount)
 	}
 
 	// Decode dictionary keys
@@ -57,12 +64,16 @@ func (c *LowCardinality[T]) DecodeColumn(r *proto.Reader, rows int) error {
 		indexSize = 4
 	}
 
-	c.idxBuf = append(c.idxBuf[:0], make([]byte, rows*indexSize)...)
+	n, err := safeMul(rows, indexSize)
+	if err != nil {
+		return fmt.Errorf("low cardinality index buffer: %w", err)
+	}
+	c.idxBuf = append(c.idxBuf[:0], make([]byte, n)...)
 	if err := r.ReadFull(c.idxBuf); err != nil {
 		return err
 	}
 
-	// Map indices to Values
+	keyLen := len(c.keys)
 	for i := 0; i < rows; i++ {
 		var idx int
 		switch indexSize {
@@ -72,6 +83,9 @@ func (c *LowCardinality[T]) DecodeColumn(r *proto.Reader, rows int) error {
 			idx = int(binary.LittleEndian.Uint16(c.idxBuf[i*2:]))
 		case 4:
 			idx = int(binary.LittleEndian.Uint32(c.idxBuf[i*4:]))
+		}
+		if idx >= keyLen || idx < 0 {
+			return fmt.Errorf("key index %d out of range [0, %d)", idx, keyLen)
 		}
 		c.Values.Append(c.keys[idx])
 	}

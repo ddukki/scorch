@@ -2,10 +2,22 @@ package column
 
 import (
 	"encoding/binary"
+	"fmt"
+	"math"
 	"unsafe"
 
 	"github.com/ClickHouse/ch-go/proto"
 )
+
+func safeMul(rows, elemSize int) (int, error) {
+	if rows <= 0 || elemSize <= 0 {
+		return 0, fmt.Errorf("non-positive multiplier")
+	}
+	if math.MaxInt/rows < elemSize {
+		return 0, fmt.Errorf("integer overflow: %d * %d", rows, elemSize)
+	}
+	return rows * elemSize, nil
+}
 
 type Column interface {
 	Name() string
@@ -77,7 +89,10 @@ func (c *Base[T]) DecodeColumn(r *proto.Reader, rows int) error {
 	}
 	var zero T
 	elemSize := int(unsafe.Sizeof(zero))
-	n := rows * elemSize
+	n, err := safeMul(rows, elemSize)
+	if err != nil {
+		return fmt.Errorf("decode column %s: %w", c.name, err)
+	}
 	raw := make([]byte, n)
 	if err := r.ReadFull(raw); err != nil {
 		return err
@@ -104,7 +119,10 @@ func (c *Base[T]) EncodeColumn(b *proto.Buffer) error {
 	}
 	var zero T
 	elemSize := int(unsafe.Sizeof(zero))
-	n := len(c.Data) * elemSize
+	n, err := safeMul(len(c.Data), elemSize)
+	if err != nil {
+		return fmt.Errorf("encode column %s: %w", c.name, err)
+	}
 	off := len(b.Buf)
 	b.Buf = append(b.Buf, make([]byte, n)...)
 	for i, v := range c.Data {
@@ -128,10 +146,22 @@ func (c *Base[T]) WriteColumn(w *proto.Writer) {
 	}
 	var zero T
 	elemSize := int(unsafe.Sizeof(zero))
-	n := len(c.Data) * elemSize
-	// Use unsafe to create a []byte header backed by c.Data's backing array.
-	// Safe because c.Data's backing array won't be mutated during write.
-	sh := (*[3]int)(unsafe.Pointer(&c.Data))
-	b := unsafe.Slice((*byte)(unsafe.Pointer(uintptr(sh[0]))), n)
+	n, err := safeMul(len(c.Data), elemSize)
+	if err != nil {
+		panic(fmt.Errorf("write column %s: %w", c.name, err))
+	}
+	b := make([]byte, n)
+	for i, v := range c.Data {
+		switch elemSize {
+		case 1:
+			b[i] = *(*byte)(unsafe.Pointer(&v))
+		case 2:
+			binary.LittleEndian.PutUint16(b[i*2:], *(*uint16)(unsafe.Pointer(&v)))
+		case 4:
+			binary.LittleEndian.PutUint32(b[i*4:], *(*uint32)(unsafe.Pointer(&v)))
+		case 8:
+			binary.LittleEndian.PutUint64(b[i*8:], *(*uint64)(unsafe.Pointer(&v)))
+		}
+	}
 	w.ChainWrite(b)
 }

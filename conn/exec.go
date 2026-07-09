@@ -2,6 +2,7 @@ package conn
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ClickHouse/ch-go/proto"
 )
@@ -205,6 +206,9 @@ func (c *Conn) readColumnInfoBlock() error {
 	if err != nil {
 		return &Error{Kind: KindNetwork, Message: "read column count", Err: err}
 	}
+	if cols > 1_000_000 || cols < 0 {
+		return &Error{Kind: KindProtocol, Message: fmt.Sprintf("column count %d out of range", cols)}
+	}
 	rows, err := c.reader.Int()
 	if err != nil {
 		return &Error{Kind: KindNetwork, Message: "read row count", Err: err}
@@ -247,7 +251,8 @@ func (c *Conn) sendCancel() {
 	c.writer.ChainBuffer(func(b *proto.Buffer) {
 		b.PutUVarInt(uint64(proto.ClientCodeCancel))
 	})
-	c.writer.Flush()
+	// Best-effort; caller is already on ctx.Done() path.
+	_, _ = c.writer.Flush()
 }
 
 // skipBlock reads and discards a data block sent by the server.  Server

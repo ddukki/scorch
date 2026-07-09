@@ -70,6 +70,13 @@ code, err := c.reader.UVarInt()
 				return rows, &Error{Kind: KindProtocol, Message: "decode block rows", Err: err}
 			}
 
+			if blockCols > 1_000_000 || blockCols < 0 {
+				return rows, &Error{Kind: KindProtocol, Message: fmt.Sprintf("block columns %d out of range", blockCols)}
+			}
+			if blockRows > 100_000_000 || blockRows < 0 {
+				return rows, &Error{Kind: KindProtocol, Message: fmt.Sprintf("block rows %d out of range", blockRows)}
+			}
+
 			if blockCols == 0 && blockRows == 0 {
 				continue
 			}
