@@ -86,6 +86,9 @@ func (c *Conn) Insert(ctx context.Context, query string, cols ...Column) error {
 				b.PutBool(false)
 			}
 		})
+		if s, ok := col.(StateEncoder); ok {
+			w.ChainBuffer(s.EncodeState)
+		}
 		col.WriteColumn(w)
 	}
 	// 4. Blank block

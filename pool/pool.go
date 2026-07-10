@@ -260,6 +260,46 @@ func (p *Pool) AddrStates() []AddrState {
 	return states
 }
 
+func (p *Pool) SelectStream(ctx context.Context, query string) (*conn.SelectStream, error) {
+	pc, err := p.Acquire(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	s, err := pc.Conn.SelectStream(ctx, query)
+	if err != nil {
+		pc.Release()
+		return nil, err
+	}
+
+	s.SetRelease(func() {
+		pc.Conn.Unlock()
+		pc.Release()
+	})
+
+	return s, nil
+}
+
+func (p *Pool) InsertStream(ctx context.Context, query string) (*conn.InsertStream, error) {
+	pc, err := p.Acquire(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	s, err := pc.Conn.InsertStream(ctx, query)
+	if err != nil {
+		pc.Release()
+		return nil, err
+	}
+
+	s.SetRelease(func() {
+		pc.Conn.Unlock()
+		pc.Release()
+	})
+
+	return s, nil
+}
+
 func (p *Pool) healthLoop(ctx context.Context) {
 	ticker := time.NewTicker(p.cfg.HealthCheckInterval)
 	defer ticker.Stop()

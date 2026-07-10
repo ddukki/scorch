@@ -101,6 +101,11 @@ code, err := c.reader.UVarInt()
 					}
 				}
 				if blockRows > 0 {
+					if s, ok := col.(StateDecoder); ok {
+						if err := s.DecodeState(c.reader); err != nil {
+							return rows, &Error{Kind: KindProtocol, Message: fmt.Sprintf("decode state column %d [%s]", i, col.Name()), Err: err}
+						}
+					}
 					if err := col.DecodeColumn(c.reader, blockRows); err != nil {
 						return rows, &Error{Kind: KindProtocol, Message: fmt.Sprintf("decode column %d [%s]", i, col.Name()), Err: err}
 					}

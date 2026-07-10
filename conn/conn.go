@@ -149,6 +149,10 @@ func (c *Conn) unlock() {
 	c.mu.Unlock()
 }
 
+func (c *Conn) Unlock() {
+	c.unlock()
+}
+
 func (c *Conn) setReadTimeout(d time.Duration) {
 	if d > 0 {
 		c.conn.SetReadDeadline(time.Now().Add(d))

@@ -9,10 +9,28 @@ import (
 	"github.com/ClickHouse/ch-go/proto"
 )
 
+const (
+	keySerializationVersion         = 1
+	cardinalityKeyMask       int64  = 0b0000_1111_1111
+	cardinalityNeedGlobalDict int64 = 1 << 8
+	cardinalityHasAdditionalKeys    = 1 << 9
+	cardinalityNeedUpdateDict       = 1 << 10
+	cardinalityUpdateAll            = cardinalityHasAdditionalKeys | cardinalityNeedUpdateDict
+)
+
+type keyType byte
+
+const (
+	keyUInt8  keyType = 0
+	keyUInt16 keyType = 1
+	keyUInt32 keyType = 2
+	keyUInt64 keyType = 3
+)
+
 type LowCardinality[T comparable] struct {
 	Values ColumnOf[T]
-	keys   []T
-	idxBuf []byte
+	dict   []T   // unique keys
+	keys   []int // key indices
 }
 
 func NewLowCardinality[T comparable](col ColumnOf[T]) *LowCardinality[T] {
@@ -27,67 +45,73 @@ func (c *LowCardinality[T]) Type() proto.ColumnType {
 
 func (c *LowCardinality[T]) Len() int { return c.Values.Len() }
 
+func (c *LowCardinality[T]) EncodeState(b *proto.Buffer) {
+	b.PutInt64(int64(keySerializationVersion))
+}
+
+func (c *LowCardinality[T]) DecodeState(r *proto.Reader) error {
+	v, err := r.Int64()
+	if err != nil {
+		return fmt.Errorf("low cardinality version: %w", err)
+	}
+	if v != int64(keySerializationVersion) {
+		return fmt.Errorf("low cardinality version: got %d, want %d", v, keySerializationVersion)
+	}
+	return nil
+}
+
 func (c *LowCardinality[T]) DecodeColumn(r *proto.Reader, rows int) error {
 	if rows == 0 {
 		return nil
 	}
-	if rows > 100_000_000 || rows < 0 {
-		return fmt.Errorf("rows %d out of range", rows)
+
+	meta, err := r.Int64()
+	if err != nil {
+		return fmt.Errorf("low cardinality meta: %w", err)
 	}
-	// serialization version byte
-	if _, err := r.ReadByte(); err != nil {
-		return err
+	if (meta & cardinalityNeedGlobalDict) != 0 {
+		return fmt.Errorf("low cardinality global dictionary not supported")
+	}
+	if (meta & cardinalityHasAdditionalKeys) == 0 {
+		return fmt.Errorf("low cardinality missing additional keys bit")
 	}
 
-	keyCount, err := r.Int()
+	kt := keyType(meta & cardinalityKeyMask)
+
+	indexRows, err := r.Int64()
 	if err != nil {
-		return err
+		return fmt.Errorf("low cardinality index rows: %w", err)
 	}
-	if keyCount > 100_000_000 || keyCount < 0 {
-		return fmt.Errorf("key count %d out of range", keyCount)
+	if indexRows > 100_000_000 || indexRows < 0 {
+		return fmt.Errorf("low cardinality index rows %d out of range", indexRows)
 	}
 
 	// Decode dictionary keys
-	c.keys = append(c.keys[:0], make([]T, keyCount)...)
-	if err := c.decodeKeys(r, keyCount); err != nil {
-		return err
+	c.dict = append(c.dict[:0], make([]T, indexRows)...)
+	if err := c.decodeDictKeys(r, int(indexRows)); err != nil {
+		return fmt.Errorf("low cardinality dict: %w", err)
 	}
 
-	// Index encoding: 1/2/4 bytes per index based on key count
-	var indexSize int
-	switch {
-	case keyCount <= 256:
-		indexSize = 1
-	case keyCount <= 65536:
-		indexSize = 2
-	default:
-		indexSize = 4
-	}
-
-	n, err := safeMul(rows, indexSize)
+	keyRows, err := r.Int64()
 	if err != nil {
-		return fmt.Errorf("low cardinality index buffer: %w", err)
+		return fmt.Errorf("low cardinality key rows: %w", err)
 	}
-	c.idxBuf = append(c.idxBuf[:0], make([]byte, n)...)
-	if err := r.ReadFull(c.idxBuf); err != nil {
-		return err
+	if keyRows != int64(rows) {
+		return fmt.Errorf("low cardinality key rows mismatch: got %d, want %d", keyRows, rows)
 	}
 
-	keyLen := len(c.keys)
-	for i := 0; i < rows; i++ {
-		var idx int
-		switch indexSize {
-		case 1:
-			idx = int(c.idxBuf[i])
-		case 2:
-			idx = int(binary.LittleEndian.Uint16(c.idxBuf[i*2:]))
-		case 4:
-			idx = int(binary.LittleEndian.Uint32(c.idxBuf[i*4:]))
+	// Decode key indices based on key type
+	c.keys = append(c.keys[:0], make([]int, rows)...)
+	if err := c.decodeKeyIndices(r, rows, kt); err != nil {
+		return fmt.Errorf("low cardinality keys: %w", err)
+	}
+
+	// Resolve values from dict + key indices
+	for _, idx := range c.keys {
+		if idx >= len(c.dict) || idx < 0 {
+			return fmt.Errorf("key index %d out of range [0, %d)", idx, len(c.dict))
 		}
-		if idx >= keyLen || idx < 0 {
-			return fmt.Errorf("key index %d out of range [0, %d)", idx, keyLen)
-		}
-		c.Values.Append(c.keys[idx])
+		c.Values.Append(c.dict[idx])
 	}
 	return nil
 }
@@ -99,160 +123,84 @@ func (c *LowCardinality[T]) WriteColumn(w *proto.Writer) {
 }
 
 func (c *LowCardinality[T]) EncodeColumn(b *proto.Buffer) error {
-	// Build dictionary: collect unique keys
-	dict := make(map[T]int)
-	for i := 0; i < c.Values.Len(); i++ {
+	n := c.Values.Len()
+	if n == 0 {
+		return nil
+	}
+
+	// Build dictionary
+	dictMap := make(map[T]int)
+	for i := 0; i < n; i++ {
 		v := c.Values.Row(i)
-		if _, ok := dict[v]; !ok {
-			dict[v] = len(dict)
+		if _, ok := dictMap[v]; !ok {
+			dictMap[v] = len(dictMap)
 		}
 	}
+	dictSize := len(dictMap)
 
-	// Write serialization version
-	b.Buf = append(b.Buf, 1)
-
-	// Write dictionary
-	b.PutUVarInt(uint64(len(dict)))
-	if err := c.encodeKeys(b, dict); err != nil {
-		return err
-	}
-
-	// Write index type
-	var indexSize int
+	// Determine key type
+	var kt keyType
 	switch {
-	case len(dict) <= 256:
-		indexSize = 1
-	case len(dict) <= 65536:
-		indexSize = 2
+	case dictSize <= 256:
+		kt = keyUInt8
+	case dictSize <= 65536:
+		kt = keyUInt16
+	case int64(dictSize) <= math.MaxUint32:
+		kt = keyUInt32
 	default:
-		indexSize = 4
+		kt = keyUInt64
 	}
 
-	// Write indices
-	for i := 0; i < c.Values.Len(); i++ {
-		v := c.Values.Row(i)
-		idx := dict[v]
-		switch indexSize {
-		case 1:
-			b.Buf = append(b.Buf, byte(idx))
-		case 2:
-			var buf [2]byte
-			binary.LittleEndian.PutUint16(buf[:], uint16(idx))
-			b.Buf = append(b.Buf, buf[:]...)
-		case 4:
-			var buf [4]byte
-			binary.LittleEndian.PutUint32(buf[:], uint32(idx))
-			b.Buf = append(b.Buf, buf[:]...)
-		}
-	}
-	return nil
-}
+	// Meta
+	meta := cardinalityUpdateAll | int64(kt)
+	b.PutInt64(meta)
 
-func (c *LowCardinality[T]) decodeKeys(r *proto.Reader, n int) error {
-	var zero T
-	switch any(zero).(type) {
-	case uint8:
-		data, err := r.ReadRaw(n)
-		if err != nil {
-			return err
-		}
-		src := unsafe.Slice((*uint8)(unsafe.Pointer(&data[0])), n)
-		for i, v := range src {
-			c.keys[i] = any(v).(T)
-		}
-	case uint16:
-		data, err := r.ReadRaw(n * 2)
-		if err != nil {
-			return err
-		}
-		for i := 0; i < n; i++ {
-			c.keys[i] = any(binary.LittleEndian.Uint16(data[i*2:])).(T)
-		}
-	case uint32:
-		data, err := r.ReadRaw(n * 4)
-		if err != nil {
-			return err
-		}
-		for i := 0; i < n; i++ {
-			c.keys[i] = any(binary.LittleEndian.Uint32(data[i*4:])).(T)
-		}
-	case uint64:
-		data, err := r.ReadRaw(n * 8)
-		if err != nil {
-			return err
-		}
-		for i := 0; i < n; i++ {
-			c.keys[i] = any(binary.LittleEndian.Uint64(data[i*8:])).(T)
-		}
-	case int8:
-		data, err := r.ReadRaw(n)
-		if err != nil {
-			return err
-		}
-		for i, v := range data {
-			c.keys[i] = any(int8(v)).(T)
-		}
-	case int16:
-		data, err := r.ReadRaw(n * 2)
-		if err != nil {
-			return err
-		}
-		for i := 0; i < n; i++ {
-			c.keys[i] = any(int16(binary.LittleEndian.Uint16(data[i*2:]))).(T)
-		}
-	case int32:
-		data, err := r.ReadRaw(n * 4)
-		if err != nil {
-			return err
-		}
-		for i := 0; i < n; i++ {
-			c.keys[i] = any(int32(binary.LittleEndian.Uint32(data[i*4:]))).(T)
-		}
-	case int64:
-		data, err := r.ReadRaw(n * 8)
-		if err != nil {
-			return err
-		}
-		for i := 0; i < n; i++ {
-			c.keys[i] = any(int64(binary.LittleEndian.Uint64(data[i*8:]))).(T)
-		}
-	case float32:
-		data, err := r.ReadRaw(n * 4)
-		if err != nil {
-			return err
-		}
-		for i := 0; i < n; i++ {
-			c.keys[i] = any(math.Float32frombits(binary.LittleEndian.Uint32(data[i*4:]))).(T)
-		}
-	case float64:
-		data, err := r.ReadRaw(n * 8)
-		if err != nil {
-			return err
-		}
-		for i := 0; i < n; i++ {
-			c.keys[i] = any(math.Float64frombits(binary.LittleEndian.Uint64(data[i*8:]))).(T)
-		}
-	case string:
-		for i := 0; i < n; i++ {
-			v, err := r.Str()
-			if err != nil {
-				return err
-			}
-			c.keys[i] = any(v).(T)
-		}
-	}
-	return nil
-}
+	// Index (dictionary) size
+	b.PutInt64(int64(dictSize))
 
-func (c *LowCardinality[T]) encodeKeys(b *proto.Buffer, dict map[T]int) error {
-	// Build a reverse index: position → key
-	ordered := make([]T, len(dict))
-	for k, idx := range dict {
+	// Write ordered dict keys
+	ordered := make([]T, dictSize)
+	for k, idx := range dictMap {
 		ordered[idx] = k
 	}
+	c.encodeDictKeys(b, ordered)
 
+	// Key rows
+	b.PutInt64(int64(n))
+
+	// Write key indices
+	var indexBuf []byte
+	for i := 0; i < n; i++ {
+		idx := dictMap[c.Values.Row(i)]
+		switch kt {
+		case keyUInt8:
+			indexBuf = append(indexBuf, byte(idx))
+		case keyUInt16:
+			var buf [2]byte
+			binary.LittleEndian.PutUint16(buf[:], uint16(idx))
+			indexBuf = append(indexBuf, buf[:]...)
+		case keyUInt32:
+			var buf [4]byte
+			binary.LittleEndian.PutUint32(buf[:], uint32(idx))
+			indexBuf = append(indexBuf, buf[:]...)
+		case keyUInt64:
+			var buf [8]byte
+			binary.LittleEndian.PutUint64(buf[:], uint64(idx))
+			indexBuf = append(indexBuf, buf[:]...)
+		}
+	}
+	b.Buf = append(b.Buf, indexBuf...)
+
+	return nil
+}
+
+func (c *LowCardinality[T]) encodeDictKeys(b *proto.Buffer, ordered []T) {
 	var zero T
 	switch any(zero).(type) {
+	case string:
+		for _, k := range ordered {
+			b.PutString(any(k).(string))
+		}
 	case uint8:
 		for _, k := range ordered {
 			b.Buf = append(b.Buf, byte(any(k).(uint8)))
@@ -309,9 +257,140 @@ func (c *LowCardinality[T]) encodeKeys(b *proto.Buffer, dict map[T]int) error {
 			binary.LittleEndian.PutUint64(buf[:], math.Float64bits(any(k).(float64)))
 			b.Buf = append(b.Buf, buf[:]...)
 		}
+	}
+}
+
+func (c *LowCardinality[T]) decodeDictKeys(r *proto.Reader, n int) error {
+	c.dict = c.dict[:n]
+	var zero T
+	switch any(zero).(type) {
 	case string:
-		for _, k := range ordered {
-			b.PutString(any(k).(string))
+		for i := 0; i < n; i++ {
+			v, err := r.Str()
+			if err != nil {
+				return err
+			}
+			c.dict[i] = any(v).(T)
+		}
+	case uint8:
+		data, err := r.ReadRaw(n)
+		if err != nil {
+			return err
+		}
+		src := unsafe.Slice((*uint8)(unsafe.Pointer(&data[0])), n)
+		for i, v := range src {
+			c.dict[i] = any(v).(T)
+		}
+	case uint16:
+		data, err := r.ReadRaw(n * 2)
+		if err != nil {
+			return err
+		}
+		for i := 0; i < n; i++ {
+			c.dict[i] = any(binary.LittleEndian.Uint16(data[i*2:])).(T)
+		}
+	case uint32:
+		data, err := r.ReadRaw(n * 4)
+		if err != nil {
+			return err
+		}
+		for i := 0; i < n; i++ {
+			c.dict[i] = any(binary.LittleEndian.Uint32(data[i*4:])).(T)
+		}
+	case uint64:
+		data, err := r.ReadRaw(n * 8)
+		if err != nil {
+			return err
+		}
+		for i := 0; i < n; i++ {
+			c.dict[i] = any(binary.LittleEndian.Uint64(data[i*8:])).(T)
+		}
+	case int8:
+		data, err := r.ReadRaw(n)
+		if err != nil {
+			return err
+		}
+		for i, v := range data {
+			c.dict[i] = any(int8(v)).(T)
+		}
+	case int16:
+		data, err := r.ReadRaw(n * 2)
+		if err != nil {
+			return err
+		}
+		for i := 0; i < n; i++ {
+			c.dict[i] = any(int16(binary.LittleEndian.Uint16(data[i*2:]))).(T)
+		}
+	case int32:
+		data, err := r.ReadRaw(n * 4)
+		if err != nil {
+			return err
+		}
+		for i := 0; i < n; i++ {
+			c.dict[i] = any(int32(binary.LittleEndian.Uint32(data[i*4:]))).(T)
+		}
+	case int64:
+		data, err := r.ReadRaw(n * 8)
+		if err != nil {
+			return err
+		}
+		for i := 0; i < n; i++ {
+			c.dict[i] = any(int64(binary.LittleEndian.Uint64(data[i*8:]))).(T)
+		}
+	case float32:
+		data, err := r.ReadRaw(n * 4)
+		if err != nil {
+			return err
+		}
+		for i := 0; i < n; i++ {
+			c.dict[i] = any(math.Float32frombits(binary.LittleEndian.Uint32(data[i*4:]))).(T)
+		}
+	case float64:
+		data, err := r.ReadRaw(n * 8)
+		if err != nil {
+			return err
+		}
+		for i := 0; i < n; i++ {
+			c.dict[i] = any(math.Float64frombits(binary.LittleEndian.Uint64(data[i*8:]))).(T)
+		}
+	}
+	return nil
+}
+
+func (c *LowCardinality[T]) decodeKeyIndices(r *proto.Reader, rows int, kt keyType) error {
+	c.keys = c.keys[:rows]
+	switch kt {
+	case keyUInt8:
+		data, err := r.ReadRaw(rows)
+		if err != nil {
+			return err
+		}
+		for i, v := range data {
+			c.keys[i] = int(v)
+		}
+	case keyUInt16:
+		data, err := r.ReadRaw(rows * 2)
+		if err != nil {
+			return err
+		}
+		for i := 0; i < rows; i++ {
+			c.keys[i] = int(binary.LittleEndian.Uint16(data[i*2:]))
+		}
+	case keyUInt32:
+		data, err := r.ReadRaw(rows * 4)
+		if err != nil {
+			return err
+		}
+		for i := 0; i < rows; i++ {
+			c.keys[i] = int(binary.LittleEndian.Uint32(data[i*4:]))
+		}
+	case keyUInt64:
+		data, err := r.ReadRaw(rows * 8)
+		if err != nil {
+			return err
+		}
+		for i := 0; i < rows; i++ {
+			c.keys[i] = int(binary.LittleEndian.Uint64(data[i*8:]))
 		}
 	}
 	return nil

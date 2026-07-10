@@ -10,3 +10,11 @@ type Column interface {
 	EncodeColumn(b *proto.Buffer) error
 	WriteColumn(w *proto.Writer)
 }
+
+type StateEncoder interface {
+	EncodeState(b *proto.Buffer)
+}
+
+type StateDecoder interface {
+	DecodeState(r *proto.Reader) error
+}

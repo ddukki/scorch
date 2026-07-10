@@ -11,6 +11,7 @@ import (
 	"io"
 	"log"
 
+	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 
@@ -120,10 +121,10 @@ func TestAcquireCloseE2E(t *testing.T) {
 	}
 	pc.Close() // destroy, not release
 
-	st := p.State()
-	if st.Active != 0 {
-		t.Fatalf("expected 0 active after close, got %d", st.Active)
-	}
+	// puddle Destroy() is async (go func), so we must wait for it.
+	require.Eventually(t, func() bool {
+		return p.State().Active == 0
+	}, 3*time.Second, 10*time.Millisecond)
 }
 
 func TestPoolExecE2E(t *testing.T) {
