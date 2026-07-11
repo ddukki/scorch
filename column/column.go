@@ -1,7 +1,6 @@
 package column
 
 import (
-	"encoding/binary"
 	"fmt"
 	"log"
 	"math"
@@ -94,22 +93,15 @@ func (c *Base[T]) DecodeColumn(r *proto.Reader, rows int) error {
 	if err != nil {
 		return fmt.Errorf("decode column %s: %w", c.name, err)
 	}
-	raw := make([]byte, n)
-	if err := r.ReadFull(raw); err != nil {
-		return err
-	}
 	c.Data = make([]T, rows)
-	for i := 0; i < rows; i++ {
-		switch elemSize {
-		case 1:
-			*(*uint8)(unsafe.Pointer(&c.Data[i])) = raw[i]
-		case 2:
-			*(*uint16)(unsafe.Pointer(&c.Data[i])) = binary.LittleEndian.Uint16(raw[i*2:])
-		case 4:
-			*(*uint32)(unsafe.Pointer(&c.Data[i])) = binary.LittleEndian.Uint32(raw[i*4:])
-		case 8:
-			*(*uint64)(unsafe.Pointer(&c.Data[i])) = binary.LittleEndian.Uint64(raw[i*8:])
+	switch elemSize {
+	case 1, 2, 4, 8:
+		buf := unsafe.Slice((*byte)(unsafe.Pointer(&c.Data[0])), n)
+		if err := r.ReadFull(buf); err != nil {
+			return err
 		}
+	default:
+		return fmt.Errorf("unsupported element size %d for column %s", elemSize, c.name)
 	}
 	return nil
 }
@@ -126,17 +118,12 @@ func (c *Base[T]) EncodeColumn(b *proto.Buffer) error {
 	}
 	off := len(b.Buf)
 	b.Buf = append(b.Buf, make([]byte, n)...)
-	for i, v := range c.Data {
-		switch elemSize {
-		case 1:
-			b.Buf[off+i] = *(*byte)(unsafe.Pointer(&v))
-		case 2:
-			binary.LittleEndian.PutUint16(b.Buf[off+i*2:], *(*uint16)(unsafe.Pointer(&v)))
-		case 4:
-			binary.LittleEndian.PutUint32(b.Buf[off+i*4:], *(*uint32)(unsafe.Pointer(&v)))
-		case 8:
-			binary.LittleEndian.PutUint64(b.Buf[off+i*8:], *(*uint64)(unsafe.Pointer(&v)))
-		}
+	switch elemSize {
+	case 1, 2, 4, 8:
+		src := unsafe.Slice((*byte)(unsafe.Pointer(&c.Data[0])), n)
+		copy(b.Buf[off:], src)
+	default:
+		return fmt.Errorf("unsupported element size %d for column %s", elemSize, c.name)
 	}
 	return nil
 }
@@ -152,18 +139,11 @@ func (c *Base[T]) WriteColumn(w *proto.Writer) {
 		log.Printf("chu-go/column: encode %s safeMul %d*%d: %v", c.name, len(c.Data), elemSize, err)
 		return
 	}
-	b := make([]byte, n)
-	for i, v := range c.Data {
-		switch elemSize {
-		case 1:
-			b[i] = *(*byte)(unsafe.Pointer(&v))
-		case 2:
-			binary.LittleEndian.PutUint16(b[i*2:], *(*uint16)(unsafe.Pointer(&v)))
-		case 4:
-			binary.LittleEndian.PutUint32(b[i*4:], *(*uint32)(unsafe.Pointer(&v)))
-		case 8:
-			binary.LittleEndian.PutUint64(b[i*8:], *(*uint64)(unsafe.Pointer(&v)))
-		}
+	switch elemSize {
+	case 1, 2, 4, 8:
+		src := unsafe.Slice((*byte)(unsafe.Pointer(&c.Data[0])), n)
+		w.ChainWrite(src)
+	default:
+		log.Printf("chu-go/column: unsupported element size %d for column %s", elemSize, c.name)
 	}
-	w.ChainWrite(b)
 }
