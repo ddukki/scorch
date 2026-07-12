@@ -46,15 +46,30 @@ func (c *Str) DecodeColumn(r *proto.Reader, rows int) error {
 	}
 	c.pos = c.pos[:want]
 
+	var end int
 	for i := 0; i < rows; i++ {
-		raw, err := r.StrRaw()
+		n, err := r.StrLen()
 		if err != nil {
 			return err
 		}
-		c.pos[i] = len(c.buf)
-		c.buf = append(c.buf, raw...)
+		c.pos[i] = end
+		end += n
+		if cap(c.buf) < end {
+			newCap := end + n*(rows-i)
+			if n >= 128 {
+				newCap = end
+			}
+			b := make([]byte, end, newCap)
+			copy(b, c.buf)
+			c.buf = b
+		} else {
+			c.buf = c.buf[:end]
+		}
+		if err := r.ReadFull(c.buf[c.pos[i]:end]); err != nil {
+			return err
+		}
 	}
-	c.pos[rows] = len(c.buf)
+	c.pos[rows] = end
 
 	if cap(c.Data) < rows {
 		c.Data = make([]string, rows)
