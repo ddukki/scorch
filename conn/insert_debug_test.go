@@ -14,8 +14,7 @@ import (
 
 type dumpConn2 struct {
 	net.Conn
-	prefix string
-	mu     sync.Mutex
+	mu sync.Mutex
 }
 
 func (d *dumpConn2) Write(b []byte) (int, error) {
@@ -46,7 +45,11 @@ func TestInsertChGoStyleE2E(t *testing.T) {
 		t.Fatalf("dial: %v", err)
 	}
 	dump := &dumpConn2{Conn: raw}
-	defer dump.Close()
+	defer func() {
+		if err := dump.Close(); err != nil {
+			t.Logf("dump conn close: %v", err)
+		}
+	}()
 
 	buf := new(proto.Buffer)
 	w := proto.NewWriter(dump, buf)
@@ -72,7 +75,7 @@ func TestInsertChGoStyleE2E(t *testing.T) {
 	}
 	if proto.ServerCode(code) != proto.ServerCodeHello {
 		var ex proto.Exception
-		ex.DecodeAware(r, proto.Version)
+		_ = ex.DecodeAware(r, proto.Version)
 		t.Fatalf("expected hello: %+v", ex)
 	}
 	var sh proto.ServerHello
@@ -127,24 +130,24 @@ func TestInsertChGoStyleE2E(t *testing.T) {
 				goto nextDDL
 			case proto.ServerCodeException:
 				var ex proto.Exception
-				ex.DecodeAware(r, sh.Revision)
+				_ = ex.DecodeAware(r, sh.Revision)
 				t.Fatalf("DDL %q: %s (code %d)", ddl, ex.Message, ex.Code)
 			case proto.ServerCodeTableColumns:
 				var tc proto.TableColumns
-				tc.DecodeAware(r, sh.Revision)
+				_ = tc.DecodeAware(r, sh.Revision)
 			case proto.ServerCodeProgress:
 				var p proto.Progress
-				p.DecodeAware(r, sh.Revision)
+				_ = p.DecodeAware(r, sh.Revision)
 			case proto.ServerCodeData:
 				var bi proto.BlockInfo
-				bi.Decode(r)
+				_ = bi.Decode(r)
 				cols, _ := r.Int()
 				_, _ = r.Int()
 				for i := 0; i < cols; i++ {
-					r.Str()
-					r.Str()
+					_, _ = r.Str()
+					_, _ = r.Str()
 					if proto.FeatureCustomSerialization.In(sh.Revision) {
-						r.Bool()
+						_, _ = r.Bool()
 					}
 				}
 			default:
@@ -183,7 +186,6 @@ func TestInsertChGoStyleE2E(t *testing.T) {
 
 	// Read column info
 	fmt.Fprintf(os.Stderr, "=== READ COLUMN INFO ===\n")
-	var colInfo proto.ColInfoInput
 readColInfo:
 	for {
 		c, err := r.UVarInt()
@@ -193,10 +195,10 @@ readColInfo:
 		switch proto.ServerCode(c) {
 		case proto.ServerCodeData:
 			if proto.FeatureTempTables.In(sh.Revision) {
-				r.Str()
+				_, _ = r.Str()
 			}
 			var bi proto.BlockInfo
-			bi.Decode(r)
+			_ = bi.Decode(r)
 			cols, _ := r.Int()
 			rows, _ := r.Int()
 			t.Logf("Column info: cols=%d rows=%d", cols, rows)
@@ -205,24 +207,24 @@ readColInfo:
 					n, _ := r.Str()
 					ty, _ := r.Str()
 					if proto.FeatureCustomSerialization.In(sh.Revision) {
-						r.Bool()
+						_, _ = r.Bool()
 					}
-					colInfo = append(colInfo, proto.ColInfo{Name: n, Type: proto.ColumnType(ty)})
+					_ = proto.ColInfo{Name: n, Type: proto.ColumnType(ty)}
 				}
 				break readColInfo
 			}
 		case proto.ServerCodeException:
 			var ex proto.Exception
-			ex.DecodeAware(r, sh.Revision)
+			_ = ex.DecodeAware(r, sh.Revision)
 			t.Fatalf("Exception: %s (code %d)", ex.Message, ex.Code)
 		case proto.ServerCodeEndOfStream:
 			t.Fatal("Unexpected EndOfStream")
 		case proto.ServerCodeProgress:
 			var p proto.Progress
-			p.DecodeAware(r, sh.Revision)
+			_ = p.DecodeAware(r, sh.Revision)
 		case proto.ServerCodeTableColumns:
 			var tc proto.TableColumns
-			tc.DecodeAware(r, sh.Revision)
+			_ = tc.DecodeAware(r, sh.Revision)
 		default:
 			t.Logf("Server code: %d", c)
 		}
@@ -283,20 +285,29 @@ readColInfo:
 				return
 			case proto.ServerCodeException:
 				var ex proto.Exception
-				ex.DecodeAware(r, sh.Revision)
+				if err := ex.DecodeAware(r, sh.Revision); err != nil {
+					done <- fmt.Errorf("decode exception: %w", err)
+					return
+				}
 				done <- fmt.Errorf("%s (code %d)", ex.Message, ex.Code)
 				return
 			case proto.ServerCodeProgress:
 				var p proto.Progress
-				p.DecodeAware(r, sh.Revision)
+				if err := p.DecodeAware(r, sh.Revision); err != nil {
+					done <- fmt.Errorf("decode progress: %w", err)
+					return
+				}
 			case proto.ServerCodeData:
 				t.Log("Got unexpected Data")
 				if proto.FeatureTempTables.In(sh.Revision) {
-					r.Str()
+					_, _ = r.Str()
 				}
 				if proto.FeatureBlockInfo.In(sh.Revision) {
 					var bi proto.BlockInfo
-					bi.Decode(r)
+					if err := bi.Decode(r); err != nil {
+						done <- fmt.Errorf("decode block info: %w", err)
+						return
+					}
 				}
 				cols, _ := r.Int()
 				rows, _ := r.Int()

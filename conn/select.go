@@ -7,6 +7,7 @@ import (
 	"github.com/ClickHouse/ch-go/proto"
 )
 
+// Select executes a SELECT query and reads results into the given columns.
 func (c *Conn) Select(ctx context.Context, query string, cols ...Column) (int, error) {
 	if err := c.lock(); err != nil {
 		return 0, err

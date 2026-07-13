@@ -36,7 +36,7 @@ type AddrState struct {
 // Pool is a round-robin connection pool with health checks.
 type Pool struct {
 	mu     sync.Mutex
-	cfg    PoolConfig
+	cfg    Config
 	subs   []*addrPool
 	rrIdx  int
 	closed bool
@@ -44,7 +44,7 @@ type Pool struct {
 }
 
 // New creates a Pool, connecting to each configured address.
-func New(ctx context.Context, cfg PoolConfig) (*Pool, error) {
+func New(ctx context.Context, cfg Config) (*Pool, error) {
 	addrs := cfg.Addrs
 	if len(addrs) == 0 {
 		a := cfg.Addr
@@ -79,7 +79,8 @@ func New(ctx context.Context, cfg PoolConfig) (*Pool, error) {
 	return p, nil
 }
 
-func (p *Pool) Acquire(ctx context.Context) (*PoolConn, error) {
+// Acquire returns a connection from the pool, round-robining across replicas.
+func (p *Pool) Acquire(ctx context.Context) (*Conn, error) {
 	p.mu.Lock()
 	if p.closed {
 		p.mu.Unlock()
@@ -122,7 +123,7 @@ func (p *Pool) Acquire(ctx context.Context) (*PoolConn, error) {
 			continue
 		}
 
-		return &PoolConn{
+		return &Conn{
 			Conn: res.Value(),
 			addr: sp.addr,
 			res:  res,
@@ -145,6 +146,7 @@ func (p *Pool) Acquire(ctx context.Context) (*PoolConn, error) {
 	return nil, &conn.Error{Kind: conn.KindInternal, Message: "no available connections"}
 }
 
+// Exec executes a DDL/DML query via an acquired connection.
 func (p *Pool) Exec(ctx context.Context, query string) error {
 	pc, err := p.Acquire(ctx)
 	if err != nil {
@@ -171,6 +173,7 @@ func (p *Pool) Exec(ctx context.Context, query string) error {
 	return nil
 }
 
+// Select executes a SELECT query and reads results into columns via an acquired connection.
 func (p *Pool) Select(ctx context.Context, query string, cols ...conn.Column) (int, error) {
 	pc, err := p.Acquire(ctx)
 	if err != nil {
@@ -197,6 +200,7 @@ func (p *Pool) Select(ctx context.Context, query string, cols ...conn.Column) (i
 	return n, nil
 }
 
+// Insert executes an INSERT query via an acquired connection.
 func (p *Pool) Insert(ctx context.Context, query string, cols ...conn.Column) error {
 	pc, err := p.Acquire(ctx)
 	if err != nil {
@@ -223,6 +227,7 @@ func (p *Pool) Insert(ctx context.Context, query string, cols ...conn.Column) er
 	return nil
 }
 
+// Close shuts down the pool and all sub-pools.
 func (p *Pool) Close() {
 	p.mu.Lock()
 	if p.closed {
@@ -239,6 +244,7 @@ func (p *Pool) Close() {
 	}
 }
 
+// State returns aggregate pool connection statistics.
 func (p *Pool) State() ConnState {
 	var st ConnState
 	for _, s := range p.subs {
@@ -250,6 +256,7 @@ func (p *Pool) State() ConnState {
 	return st
 }
 
+// AddrStates returns per-address connection states.
 func (p *Pool) AddrStates() []AddrState {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -270,6 +277,7 @@ func (p *Pool) AddrStates() []AddrState {
 	return states
 }
 
+// SelectStream starts a streaming SELECT via an acquired connection.
 func (p *Pool) SelectStream(ctx context.Context, query string) (*conn.SelectStream, error) {
 	pc, err := p.Acquire(ctx)
 	if err != nil {
@@ -290,6 +298,7 @@ func (p *Pool) SelectStream(ctx context.Context, query string) (*conn.SelectStre
 	return s, nil
 }
 
+// InsertStream starts a streaming INSERT via an acquired connection.
 func (p *Pool) InsertStream(ctx context.Context, query string) (*conn.InsertStream, error) {
 	pc, err := p.Acquire(ctx)
 	if err != nil {
@@ -326,7 +335,7 @@ func (p *Pool) newSubPool(addr string) (*puddle.Pool[*conn.Conn], error) {
 			return conn.Connect(ctx, subCfg)
 		},
 		Destructor: func(c *conn.Conn) {
-			c.Close()
+			_ = c.Close()
 		},
 		MaxSize: p.maxSize(),
 	})
@@ -375,7 +384,7 @@ func (p *Pool) checkHealth(ctx context.Context) {
 		if err != nil {
 			continue
 		}
-		c.Close()
+		_ = c.Close()
 
 		pp, err := p.newSubPool(s.addr)
 		if err != nil {

@@ -14,7 +14,7 @@ const (
 	// CompressionDisabled disables wire compression.
 	CompressionDisabled = proto.CompressionDisabled
 	// CompressionEnabled enables LZ4 wire compression.
-	CompressionEnabled  = proto.CompressionEnabled
+	CompressionEnabled = proto.CompressionEnabled
 )
 
 // Setting is a ClickHouse query setting.
@@ -35,16 +35,22 @@ type Config struct {
 }
 
 func (c Config) addr() string {
-	if c.Addr == "" { return "127.0.0.1:9000" }
+	if c.Addr == "" {
+		return "127.0.0.1:9000"
+	}
 	return c.Addr
 }
 
 func (c Config) user() string {
-	if c.User == "" { return "default" }
+	if c.User == "" {
+		return "default"
+	}
 	return c.User
 }
 
 func (c Config) database() string {
-	if c.Database == "" { return "default" }
+	if c.Database == "" {
+		return "default"
+	}
 	return c.Database
 }

@@ -10,12 +10,12 @@ import (
 )
 
 const (
-	keySerializationVersion         = 1
-	cardinalityKeyMask       int64  = 0b0000_1111_1111
-	cardinalityNeedGlobalDict int64 = 1 << 8
-	cardinalityHasAdditionalKeys    = 1 << 9
-	cardinalityNeedUpdateDict       = 1 << 10
-	cardinalityUpdateAll            = cardinalityHasAdditionalKeys | cardinalityNeedUpdateDict
+	keySerializationVersion            = 1
+	cardinalityKeyMask           int64 = 0b0000_1111_1111
+	cardinalityNeedGlobalDict    int64 = 1 << 8
+	cardinalityHasAdditionalKeys       = 1 << 9
+	cardinalityNeedUpdateDict          = 1 << 10
+	cardinalityUpdateAll               = cardinalityHasAdditionalKeys | cardinalityNeedUpdateDict
 )
 
 type keyType byte
@@ -29,7 +29,7 @@ const (
 
 // LowCardinality stores dict-encoded keys without expanding on decode.
 type LowCardinality[T comparable] struct {
-	Values   ColumnOf[T]
+	Values   Of[T]
 	dict     []T    // unique keys
 	keys     []byte // key indices (narrow wire encoding)
 	keyWidth int    // 1, 2, 4, or 8
@@ -51,16 +51,19 @@ func (c *LowCardinality[T]) key(i int) int {
 }
 
 // NewLowCardinality wraps a column into a LowCardinality column.
-func NewLowCardinality[T comparable](col ColumnOf[T]) *LowCardinality[T] {
+func NewLowCardinality[T comparable](col Of[T]) *LowCardinality[T] {
 	return &LowCardinality[T]{Values: col}
 }
 
+// Name returns the inner column name.
 func (c *LowCardinality[T]) Name() string { return c.Values.Name() }
 
+// Type returns proto.ColumnTypeLowCardinality(inner).
 func (c *LowCardinality[T]) Type() proto.ColumnType {
 	return proto.ColumnTypeLowCardinality.Sub(c.Values.Type())
 }
 
+// Len returns the number of elements in the column.
 func (c *LowCardinality[T]) Len() int {
 	if c.expanded || len(c.dict) == 0 {
 		return c.Values.Len()
@@ -68,6 +71,7 @@ func (c *LowCardinality[T]) Len() int {
 	return len(c.keys) / c.keyWidth
 }
 
+// Row returns the value at index i, resolving through the dictionary if needed.
 func (c *LowCardinality[T]) Row(i int) T {
 	if c.expanded || len(c.dict) == 0 {
 		return c.Values.Row(i)
@@ -96,10 +100,12 @@ func (c *LowCardinality[T]) ensureExpanded() {
 	c.expanded = true
 }
 
+// EncodeState encodes the serialization version for low cardinality state.
 func (c *LowCardinality[T]) EncodeState(b *proto.Buffer) {
 	b.PutInt64(int64(keySerializationVersion))
 }
 
+// DecodeState reads and validates the serialization version.
 func (c *LowCardinality[T]) DecodeState(r *proto.Reader) error {
 	v, err := r.Int64()
 	if err != nil {
@@ -111,6 +117,7 @@ func (c *LowCardinality[T]) DecodeState(r *proto.Reader) error {
 	return nil
 }
 
+// DecodeColumn decodes low cardinality rows from the wire protocol.
 func (c *LowCardinality[T]) DecodeColumn(r *proto.Reader, rows int) error {
 	if rows == 0 {
 		return nil
@@ -169,6 +176,7 @@ func (c *LowCardinality[T]) DecodeColumn(r *proto.Reader, rows int) error {
 	return nil
 }
 
+// WriteColumn writes the low cardinality column to the wire writer.
 func (c *LowCardinality[T]) WriteColumn(w *proto.Writer) {
 	c.ensureExpanded()
 	w.ChainBuffer(func(b *proto.Buffer) {
@@ -176,6 +184,7 @@ func (c *LowCardinality[T]) WriteColumn(w *proto.Writer) {
 	})
 }
 
+// EncodeColumn encodes the low cardinality column data to the wire buffer.
 func (c *LowCardinality[T]) EncodeColumn(b *proto.Buffer) error {
 	c.ensureExpanded()
 	n := c.Values.Len()

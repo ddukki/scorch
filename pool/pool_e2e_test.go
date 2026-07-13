@@ -11,10 +11,10 @@ import (
 	"io"
 	"log"
 
+	"github.com/ddukki/scorch/column"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
-"github.com/ddukki/scorch/column"
 
 	"github.com/ddukki/scorch/conn"
 )
@@ -42,7 +42,11 @@ func TestMain(m *testing.M) {
 		fmt.Fprintf(os.Stderr, "skip e2e tests: %v\n", err)
 		os.Exit(m.Run())
 	}
-	defer ch.Terminate(ctx)
+	defer func() {
+		if err := ch.Terminate(ctx); err != nil {
+			log.Printf("terminate container: %v", err)
+		}
+	}()
 
 	if code, r, err := ch.Exec(ctx, []string{"clickhouse-server", "--version"}); err == nil && code == 0 {
 		b, _ := io.ReadAll(r)
@@ -54,7 +58,10 @@ func TestMain(m *testing.M) {
 		fmt.Fprintf(os.Stderr, "skip e2e tests: %v\n", err)
 		os.Exit(m.Run())
 	}
-	os.Setenv("CLICKHOUSE_HOST", addr)
+	if err := os.Setenv("CLICKHOUSE_HOST", addr); err != nil {
+		fmt.Fprintf(os.Stderr, "setenv: %v\n", err)
+		os.Exit(1)
+	}
 	os.Exit(m.Run())
 }
 
@@ -66,7 +73,7 @@ func connectPoolE2E(t *testing.T) *Pool {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	p, err := New(ctx, PoolConfig{
+	p, err := New(ctx, Config{
 		Config:   conn.Config{Addr: host, Password: "test"},
 		MaxConns: 5,
 	})
@@ -152,7 +159,11 @@ func TestPoolSelectInsertE2E(t *testing.T) {
 	if err := p.Exec(ctx, "CREATE TABLE pool_test_select_insert (id UInt64, name String) ENGINE = Memory"); err != nil {
 		t.Fatalf("Exec CREATE: %v", err)
 	}
-	defer p.Exec(ctx, "DROP TABLE IF EXISTS pool_test_select_insert")
+	defer func() {
+		if err := p.Exec(ctx, "DROP TABLE IF EXISTS pool_test_select_insert"); err != nil {
+			t.Logf("drop table: %v", err)
+		}
+	}()
 
 	idCol := column.NewBase[uint64]("id")
 	idCol.Append(1)

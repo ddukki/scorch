@@ -7,23 +7,30 @@ import (
 
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/ddukki/scorch/column"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSelectStreamSingleBlockE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() { require.NoError(t, c.Close()) }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	c.Exec(ctx, "DROP TABLE IF EXISTS test_stream_select")
-	c.Exec(ctx, "CREATE TABLE test_stream_select (id UInt64, name String) ENGINE = Memory")
+	if err := c.Exec(ctx, "DROP TABLE IF EXISTS test_stream_select"); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.Exec(ctx, "CREATE TABLE test_stream_select (id UInt64, name String) ENGINE = Memory"); err != nil {
+		t.Fatal(err)
+	}
 
 	idCol := column.NewBase[uint64]("id")
 	idCol.AppendArr([]uint64{1, 2, 3})
 	nameCol := column.NewStr("name")
 	nameCol.AppendArr([]string{"a", "b", "c"})
-	c.Insert(ctx, "INSERT INTO test_stream_select (id, name) VALUES", idCol, nameCol)
+	if err := c.Insert(ctx, "INSERT INTO test_stream_select (id, name) VALUES", idCol, nameCol); err != nil {
+		t.Fatal(err)
+	}
 
 	outID := column.NewBase[uint64]("id")
 	outName := column.NewStr("name")
@@ -32,7 +39,7 @@ func TestSelectStreamSingleBlockE2E(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SelectStream: %v", err)
 	}
-	defer s.Close()
+	defer func() { require.NoError(t, s.Close()) }()
 
 	s.Bind(outID, outName)
 
@@ -62,7 +69,7 @@ func TestSelectStreamSingleBlockE2E(t *testing.T) {
 
 func TestSelectStreamBindBeforeNextE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() { require.NoError(t, c.Close()) }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -71,7 +78,7 @@ func TestSelectStreamBindBeforeNextE2E(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SelectStream: %v", err)
 	}
-	defer s.Close()
+	defer func() { require.NoError(t, s.Close()) }()
 
 	if s.Next() {
 		t.Fatal("expected Next() == false without Bind")
@@ -83,26 +90,32 @@ func TestSelectStreamBindBeforeNextE2E(t *testing.T) {
 
 func TestSelectStreamCancelMidStreamE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() { require.NoError(t, c.Close()) }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	c.Exec(ctx, "DROP TABLE IF EXISTS test_stream_cancel")
-	c.Exec(ctx, "CREATE TABLE test_stream_cancel (id UInt64) ENGINE = Memory")
+	if err := c.Exec(ctx, "DROP TABLE IF EXISTS test_stream_cancel"); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.Exec(ctx, "CREATE TABLE test_stream_cancel (id UInt64) ENGINE = Memory"); err != nil {
+		t.Fatal(err)
+	}
 
 	col := column.NewBase[uint64]("id")
 	for i := uint64(0); i < 500; i++ {
 		col.Append(i)
 	}
-	c.Insert(ctx, "INSERT INTO test_stream_cancel (id) VALUES", col)
+	if err := c.Insert(ctx, "INSERT INTO test_stream_cancel (id) VALUES", col); err != nil {
+		t.Fatal(err)
+	}
 
 	out := column.NewBase[uint64]("id")
 	s, err := c.SelectStream(ctx, "SELECT id FROM test_stream_cancel ORDER BY id")
 	if err != nil {
 		t.Fatalf("SelectStream: %v", err)
 	}
-	defer s.Close()
+	defer func() { require.NoError(t, s.Close()) }()
 
 	s.Bind(out)
 	if !s.Next() {
@@ -117,7 +130,7 @@ func TestSelectStreamCancelMidStreamE2E(t *testing.T) {
 
 func TestSelectStreamCloseBeforeNextE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() { require.NoError(t, c.Close()) }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -133,7 +146,7 @@ func TestSelectStreamCloseBeforeNextE2E(t *testing.T) {
 
 func TestSelectStreamMultipleCloseE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() { require.NoError(t, c.Close()) }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -152,7 +165,7 @@ func TestSelectStreamMultipleCloseE2E(t *testing.T) {
 
 func TestSelectStreamCallbacksE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() { require.NoError(t, c.Close()) }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -165,18 +178,24 @@ func TestSelectStreamCallbacksE2E(t *testing.T) {
 		}
 	}
 
-	c.Exec(ctx, "DROP TABLE IF EXISTS test_stream_cb")
-	c.Exec(ctx, "CREATE TABLE test_stream_cb (id UInt64) ENGINE = Memory")
+	if err := c.Exec(ctx, "DROP TABLE IF EXISTS test_stream_cb"); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.Exec(ctx, "CREATE TABLE test_stream_cb (id UInt64) ENGINE = Memory"); err != nil {
+		t.Fatal(err)
+	}
 	col := column.NewBase[uint64]("id")
 	col.AppendArr([]uint64{1, 2, 3})
-	c.Insert(ctx, "INSERT INTO test_stream_cb (id) VALUES", col)
+	if err := c.Insert(ctx, "INSERT INTO test_stream_cb (id) VALUES", col); err != nil {
+		t.Fatal(err)
+	}
 
 	out := column.NewBase[uint64]("id")
 	s, err := c.SelectStream(ctx, "SELECT id FROM test_stream_cb")
 	if err != nil {
 		t.Fatalf("SelectStream: %v", err)
 	}
-	defer s.Close()
+	defer func() { require.NoError(t, s.Close()) }()
 
 	s.Bind(out)
 	for s.Next() {
@@ -194,13 +213,17 @@ func TestSelectStreamCallbacksE2E(t *testing.T) {
 
 func TestInsertStreamMultiBlockE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() { require.NoError(t, c.Close()) }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	c.Exec(ctx, "DROP TABLE IF EXISTS test_insert_stream")
-	c.Exec(ctx, "CREATE TABLE test_insert_stream (id UInt64, name String) ENGINE = Memory")
+	if err := c.Exec(ctx, "DROP TABLE IF EXISTS test_insert_stream"); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.Exec(ctx, "CREATE TABLE test_insert_stream (id UInt64, name String) ENGINE = Memory"); err != nil {
+		t.Fatal(err)
+	}
 
 	idCol := column.NewBase[uint64]("id")
 	nameCol := column.NewStr("name")
@@ -246,7 +269,7 @@ func TestInsertStreamMultiBlockE2E(t *testing.T) {
 
 func TestInsertStreamBindBeforeAppendE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() { require.NoError(t, c.Close()) }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -255,7 +278,7 @@ func TestInsertStreamBindBeforeAppendE2E(t *testing.T) {
 	if err != nil {
 		t.Fatalf("InsertStream: %v", err)
 	}
-	defer s.Close()
+	defer func() { require.NoError(t, s.Close()) }()
 
 	if err := s.Append(); err == nil {
 		t.Fatal("expected error without Bind")
@@ -264,7 +287,7 @@ func TestInsertStreamBindBeforeAppendE2E(t *testing.T) {
 
 func TestInsertStreamNoDataE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() { require.NoError(t, c.Close()) }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -273,7 +296,7 @@ func TestInsertStreamNoDataE2E(t *testing.T) {
 	if err != nil {
 		t.Fatalf("InsertStream: %v", err)
 	}
-	defer s.Close()
+	defer func() { require.NoError(t, s.Close()) }()
 
 	s.Bind(column.NewBase[uint64]("id"))
 	if err := s.Append(); err == nil {
@@ -283,7 +306,7 @@ func TestInsertStreamNoDataE2E(t *testing.T) {
 
 func TestInsertStreamMultipleCloseE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() { require.NoError(t, c.Close()) }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()

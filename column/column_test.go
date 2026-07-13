@@ -8,7 +8,7 @@ import (
 	"github.com/ClickHouse/ch-go/proto"
 )
 
-func roundTrip[T comparable](t *testing.T, col ColumnOf[T], vals []T) {
+func roundTrip[T comparable](t *testing.T, col Of[T], vals []T) {
 	t.Helper()
 	for _, v := range vals {
 		col.Append(v)

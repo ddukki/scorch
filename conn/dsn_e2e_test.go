@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/ddukki/scorch/column"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDSNE2E_FullAuth(t *testing.T) {
@@ -28,7 +29,7 @@ func TestDSNE2E_FullAuth(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer c.Close()
+	defer func() { require.NoError(t, c.Close()) }()
 	if err := c.Ping(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +54,7 @@ func TestDSNE2E_Settings(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer c.Close()
+	defer func() { require.NoError(t, c.Close()) }()
 	if err := c.Ping(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +76,7 @@ func TestDSNE2E_InsertWithDSN(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer c.Close()
+	defer func() { require.NoError(t, c.Close()) }()
 
 	if err := c.Exec(ctx, "CREATE TABLE IF NOT EXISTS test_dsn_e2e (id UInt64, name String) ENGINE = Memory"); err != nil {
 		t.Fatal(err)
@@ -123,7 +124,7 @@ func TestDSNE2E_UnknownParamBecomesSetting(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer c.Close()
+	defer func() { require.NoError(t, c.Close()) }()
 	if err := c.Ping(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -157,10 +158,7 @@ func FuzzParseDSN(f *testing.F) {
 		f.Add(s)
 	}
 	f.Fuzz(func(t *testing.T, dsn string) {
-		_, err := ParseDSN(dsn)
-		if err != nil {
-			return
-		}
+		_, _ = ParseDSN(dsn)
 	})
 }
 
@@ -183,7 +181,7 @@ func TestDSNE2E_MultiHost(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer c.Close()
+	defer func() { require.NoError(t, c.Close()) }()
 	if err := c.Ping(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -202,6 +200,6 @@ func FuzzParseDSNStability(f *testing.F) {
 		f.Add(b.String())
 	}
 	f.Fuzz(func(t *testing.T, dsn string) {
-		ParseDSN(dsn)
+		_, _ = ParseDSN(dsn)
 	})
 }

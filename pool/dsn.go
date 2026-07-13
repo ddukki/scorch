@@ -8,17 +8,17 @@ import (
 	"github.com/ddukki/scorch/dsn"
 )
 
-// ParsePoolDSN parses a clickhouse:// DSN into PoolConfig.
-func ParsePoolDSN(s string) (PoolConfig, error) {
+// ParsePoolDSN parses a clickhouse:// DSN into Config.
+func ParsePoolDSN(s string) (Config, error) {
 	r, err := dsn.Parse(s)
 	if err != nil {
-		return PoolConfig{}, err
+		return Config{}, err
 	}
 	compression, ok := parseCompression(r.Compression)
 	if !ok {
-		return PoolConfig{}, &conn.Error{Kind: conn.KindConfig, Message: "invalid compress value"}
+		return Config{}, &conn.Error{Kind: conn.KindConfig, Message: "invalid compress value"}
 	}
-	return PoolConfig{
+	return Config{
 		Addrs: r.Addrs,
 		Config: conn.Config{
 			Addr:         r.Addrs[0],

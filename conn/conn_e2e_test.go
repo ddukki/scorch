@@ -37,7 +37,11 @@ func TestMain(m *testing.M) {
 		fmt.Fprintf(os.Stderr, "skip e2e tests: %v\n", err)
 		os.Exit(m.Run())
 	}
-	defer ch.Terminate(ctx)
+	defer func() {
+		if err := ch.Terminate(ctx); err != nil {
+			log.Printf("terminate: %v", err)
+		}
+	}()
 
 	// Log ClickHouse version for test output traceability.
 	if code, r, err := ch.Exec(ctx, []string{"clickhouse-server", "--version"}); err == nil && code == 0 {
@@ -50,7 +54,10 @@ func TestMain(m *testing.M) {
 		fmt.Fprintf(os.Stderr, "skip e2e tests: %v\n", err)
 		os.Exit(m.Run())
 	}
-	os.Setenv("CLICKHOUSE_HOST", addr)
+	if err := os.Setenv("CLICKHOUSE_HOST", addr); err != nil {
+		fmt.Fprintf(os.Stderr, "setenv: %v\n", err)
+		os.Exit(1)
+	}
 	os.Exit(m.Run())
 }
 
@@ -74,7 +81,11 @@ func TestChGoClientE2E(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ch.Dial: %v", err)
 	}
-	defer c.Close()
+	defer func() {
+		if err := c.Close(); err != nil {
+			t.Logf("close: %v", err)
+		}
+	}()
 
 	// SELECT 1
 	var one proto.ColUInt8
@@ -99,7 +110,7 @@ func TestChGoClientE2E(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("ch.Do CREATE: %v", err)
 	}
-	defer c.Do(ctx, ch.Query{Body: "DROP TABLE IF EXISTS test_ch_go_e2e"})
+	defer func() { _ = c.Do(ctx, ch.Query{Body: "DROP TABLE IF EXISTS test_ch_go_e2e"}) }()
 
 	// INSERT
 	var (
@@ -156,7 +167,11 @@ func connectE2E(t *testing.T) *Conn {
 
 func TestConnectE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() {
+		if err := c.Close(); err != nil {
+			t.Logf("close: %v", err)
+		}
+	}()
 
 	if c.State() != StateReady {
 		t.Fatalf("state: got %d, want %d", c.State(), StateReady)
@@ -165,7 +180,11 @@ func TestConnectE2E(t *testing.T) {
 
 func TestPingE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() {
+		if err := c.Close(); err != nil {
+			t.Logf("close: %v", err)
+		}
+	}()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -176,7 +195,11 @@ func TestPingE2E(t *testing.T) {
 
 func TestExecDDLE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() {
+		if err := c.Close(); err != nil {
+			t.Logf("close: %v", err)
+		}
+	}()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -192,7 +215,11 @@ func TestExecDDLE2E(t *testing.T) {
 
 func TestSelectOnlyE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() {
+		if err := c.Close(); err != nil {
+			t.Logf("close: %v", err)
+		}
+	}()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -214,7 +241,11 @@ func TestSelectOnlyE2E(t *testing.T) {
 
 func TestCloseIdempotentE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() {
+		if err := c.Close(); err != nil {
+			t.Logf("close: %v", err)
+		}
+	}()
 
 	if err := c.Close(); err != nil {
 		t.Fatalf("first Close: %v", err)
@@ -247,7 +278,11 @@ func TestStateTransitionsE2E(t *testing.T) {
 
 func TestExecContextCancelE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() {
+		if err := c.Close(); err != nil {
+			t.Logf("close: %v", err)
+		}
+	}()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Nanosecond)
 	defer cancel()
@@ -261,7 +296,11 @@ func TestExecContextCancelE2E(t *testing.T) {
 
 func TestSelectInsertE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() {
+		if err := c.Close(); err != nil {
+			t.Logf("close: %v", err)
+		}
+	}()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -272,7 +311,7 @@ func TestSelectInsertE2E(t *testing.T) {
 	if err := c.Exec(ctx, "CREATE TABLE test_select_insert_e2e (id UInt64, name String) ENGINE = Memory"); err != nil {
 		t.Fatalf("Exec CREATE: %v", err)
 	}
-	defer c.Exec(ctx, "DROP TABLE IF EXISTS test_select_insert_e2e")
+	defer func() { _ = c.Exec(ctx, "DROP TABLE IF EXISTS test_select_insert_e2e") }()
 
 	idCol := column.NewBase[uint64]("id")
 	idCol.Append(1)
@@ -311,7 +350,11 @@ func TestSelectInsertE2E(t *testing.T) {
 
 func TestSelectColumnMismatchE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() {
+		if err := c.Close(); err != nil {
+			t.Logf("close: %v", err)
+		}
+	}()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -331,7 +374,11 @@ func TestSelectColumnMismatchE2E(t *testing.T) {
 
 func TestInsertZeroRowsE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() {
+		if err := c.Close(); err != nil {
+			t.Logf("close: %v", err)
+		}
+	}()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -352,7 +399,11 @@ func TestInsertZeroRowsE2E(t *testing.T) {
 
 func TestSelectInsertLowCardinalityE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() {
+		if err := c.Close(); err != nil {
+			t.Logf("close: %v", err)
+		}
+	}()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -363,7 +414,7 @@ func TestSelectInsertLowCardinalityE2E(t *testing.T) {
 	if err := c.Exec(ctx, "CREATE TABLE test_lc_e2e (id UInt64, city LowCardinality(String)) ENGINE = Memory"); err != nil {
 		t.Fatalf("Exec CREATE: %v", err)
 	}
-	defer c.Exec(ctx, "DROP TABLE IF EXISTS test_lc_e2e")
+	defer func() { _ = c.Exec(ctx, "DROP TABLE IF EXISTS test_lc_e2e") }()
 
 	idCol := column.NewBase[uint64]("id")
 	idCol.Append(10)
@@ -399,7 +450,11 @@ func TestSelectInsertLowCardinalityE2E(t *testing.T) {
 
 func TestSelectCallbackE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() {
+		if err := c.Close(); err != nil {
+			t.Logf("close: %v", err)
+		}
+	}()
 
 	var progressCalled bool
 	c.OnProgress = func(p proto.Progress) {
@@ -415,7 +470,7 @@ func TestSelectCallbackE2E(t *testing.T) {
 	if err := c.Exec(ctx, "CREATE TABLE test_cb_e2e (id UInt64) ENGINE = Memory"); err != nil {
 		t.Fatalf("Exec CREATE: %v", err)
 	}
-	defer c.Exec(ctx, "DROP TABLE IF EXISTS test_cb_e2e")
+	defer func() { _ = c.Exec(ctx, "DROP TABLE IF EXISTS test_cb_e2e") }()
 
 	idCol := column.NewBase[uint64]("id")
 	for i := uint64(0); i < 1000; i++ {

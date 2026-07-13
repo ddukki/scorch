@@ -3,9 +3,9 @@ package conn
 import (
 	"context"
 	"crypto/tls"
+	"log"
 	"net"
 	"sync"
-	"time"
 
 	"github.com/ClickHouse/ch-go/proto"
 )
@@ -27,16 +27,16 @@ const (
 // Conn is a single ClickHouse native-protocol connection.
 // Not safe for concurrent use — at most one query at a time.
 type Conn struct {
-	mu    sync.Mutex
-	state State
-	conn  net.Conn
-	cfg   Config
-	reader   *proto.Reader
-	writer   *proto.Writer
-	server      proto.ServerHello
-	localAddr   net.Addr
-	prefixBytes []byte
-	queryBuf    *proto.Buffer
+	mu              sync.Mutex
+	state           State
+	conn            net.Conn
+	cfg             Config
+	reader          *proto.Reader
+	writer          *proto.Writer
+	server          proto.ServerHello
+	localAddr       net.Addr
+	prefixBytes     []byte
+	queryBuf        *proto.Buffer
 	skipResults     proto.Results
 	skipResultsCode proto.ServerCode
 
@@ -82,34 +82,42 @@ func Connect(ctx context.Context, cfg Config) (*Conn, error) {
 		hello.Encode(b)
 	})
 	if _, err := c.writer.Flush(); err != nil {
-		c.conn.Close()
+		_ = c.conn.Close()
 		return nil, &Error{Kind: KindNetwork, Message: "flush hello", Err: err}
 	}
 
 	code, err := c.reader.UVarInt()
 	if err != nil {
-		c.conn.Close()
+		_ = c.conn.Close()
 		return nil, &Error{Kind: KindNetwork, Message: "read hello response", Err: err}
 	}
 	switch proto.ServerCode(code) {
 	case proto.ServerCodeHello:
 		var sh proto.ServerHello
 		if err := sh.DecodeAware(c.reader, proto.Version); err != nil {
-			c.conn.Close()
+			if err := c.conn.Close(); err != nil {
+				log.Printf("scorch: close conn after decode error: %v", err)
+			}
 			return nil, &Error{Kind: KindProtocol, Message: "decode server hello", Err: err}
 		}
 		c.server = sh
-	c.localAddr = raw.LocalAddr()
+		c.localAddr = raw.LocalAddr()
 	case proto.ServerCodeException:
 		var ex proto.Exception
 		if err := ex.DecodeAware(c.reader, proto.Version); err != nil {
-			c.conn.Close()
+			if err := c.conn.Close(); err != nil {
+				log.Printf("scorch: close conn after decode exception: %v", err)
+			}
 			return nil, &Error{Kind: KindProtocol, Message: "decode exception", Err: err}
 		}
-		c.conn.Close()
+		if err := c.conn.Close(); err != nil {
+			log.Printf("scorch: close conn after server exception: %v", err)
+		}
 		return nil, &Error{Kind: KindServer, Message: ex.Message, ServerCode: int(ex.Code)}
 	default:
-		c.conn.Close()
+		if err := c.conn.Close(); err != nil {
+			log.Printf("scorch: close conn after unexpected code: %v", err)
+		}
 		return nil, &Error{Kind: KindProtocol, Message: "unexpected server code"}
 	}
 
@@ -118,7 +126,9 @@ func Connect(ctx context.Context, cfg Config) (*Conn, error) {
 			b.PutString("")
 		})
 		if _, err := c.writer.Flush(); err != nil {
-			c.conn.Close()
+			if err := c.conn.Close(); err != nil {
+				log.Printf("scorch: close conn after flush error: %v", err)
+			}
 			return nil, &Error{Kind: KindNetwork, Message: "flush addendum", Err: err}
 		}
 	}
@@ -127,6 +137,7 @@ func Connect(ctx context.Context, cfg Config) (*Conn, error) {
 	return c, nil
 }
 
+// Close closes the connection.
 func (c *Conn) Close() error {
 	c.mu.Lock()
 	if c.state == StateClosed {
@@ -138,6 +149,7 @@ func (c *Conn) Close() error {
 	return c.conn.Close()
 }
 
+// State returns the connection's lifecycle state.
 func (c *Conn) State() State {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -161,16 +173,9 @@ func (c *Conn) unlock() {
 	c.mu.Unlock()
 }
 
+// Unlock manually returns a busy connection to ready state.
 func (c *Conn) Unlock() {
 	c.unlock()
-}
-
-func (c *Conn) setReadTimeout(d time.Duration) {
-	if d > 0 {
-		c.conn.SetReadDeadline(time.Now().Add(d))
-	} else {
-		c.conn.SetReadDeadline(time.Time{})
-	}
 }
 
 func makeClientInfo(server proto.ServerHello, localAddr net.Addr) proto.ClientInfo {

@@ -6,24 +6,24 @@ import (
 	"github.com/ddukki/scorch/conn"
 )
 
-// PoolConn wraps a *conn.Conn with pool management.
-type PoolConn struct {
+// Conn wraps a *conn.Conn with pool management.
+type Conn struct {
 	*conn.Conn
 	addr string
 	res  *puddle.Resource[*conn.Conn]
 }
 
 // Release returns the connection to the pool for reuse.
-func (pc *PoolConn) Release() {
+func (pc *Conn) Release() {
 	pc.res.Release()
 }
 
 // Close destroys the connection instead of returning it.
-func (pc *PoolConn) Close() {
+func (pc *Conn) Close() {
 	pc.res.Destroy()
 }
 
 // Addr returns the server address for this connection.
-func (pc *PoolConn) Addr() string {
+func (pc *Conn) Addr() string {
 	return pc.addr
 }

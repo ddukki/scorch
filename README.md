@@ -225,7 +225,7 @@ p, _ := pool.New(ctx, cfg)
 ```go
 import "github.com/ddukki/scorch/pool"
 
-p, _ := pool.New(ctx, pool.PoolConfig{
+p, _ := pool.New(ctx, pool.Config{
     Config:              scorch.Config{Addr: "localhost:9000"},
     MaxConns:            10,
     HealthCheckInterval: 30 * time.Second,

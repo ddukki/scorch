@@ -29,8 +29,8 @@ type Column interface {
 	WriteColumn(w *proto.Writer)
 }
 
-// ColumnOf extends Column with element access for typed columns.
-type ColumnOf[T any] interface {
+// Of is a typed column interface for element access.
+type Of[T any] interface {
 	Column
 	Append(v T)
 	AppendArr(v []T)
@@ -48,16 +48,22 @@ func NewBase[T any](name string) *Base[T] {
 	return &Base[T]{name: name}
 }
 
+// Name returns the column name.
 func (c *Base[T]) Name() string { return c.name }
 
+// Len returns the number of elements in the column.
 func (c *Base[T]) Len() int { return len(c.Data) }
 
+// Append adds a single value to the column.
 func (c *Base[T]) Append(v T) { c.Data = append(c.Data, v) }
 
+// AppendArr adds multiple values to the column.
 func (c *Base[T]) AppendArr(v []T) { c.Data = append(c.Data, v...) }
 
+// Row returns the value at index i.
 func (c *Base[T]) Row(i int) T { return c.Data[i] }
 
+// Type returns the column's ClickHouse wire type.
 func (c *Base[T]) Type() proto.ColumnType {
 	var zero T
 	switch any(zero).(type) {
@@ -86,6 +92,7 @@ func (c *Base[T]) Type() proto.ColumnType {
 	}
 }
 
+// DecodeColumn decodes rows from the wire protocol into the backing array.
 func (c *Base[T]) DecodeColumn(r *proto.Reader, rows int) error {
 	if rows == 0 {
 		c.Data = c.Data[:0]
@@ -114,6 +121,7 @@ func (c *Base[T]) DecodeColumn(r *proto.Reader, rows int) error {
 	return nil
 }
 
+// EncodeColumn encodes the column data to the wire buffer.
 func (c *Base[T]) EncodeColumn(b *proto.Buffer) error {
 	if len(c.Data) == 0 {
 		return nil
@@ -136,6 +144,7 @@ func (c *Base[T]) EncodeColumn(b *proto.Buffer) error {
 	return nil
 }
 
+// WriteColumn writes the column data to the wire writer.
 func (c *Base[T]) WriteColumn(w *proto.Writer) {
 	if len(c.Data) == 0 {
 		return

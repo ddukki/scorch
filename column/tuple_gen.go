@@ -11,11 +11,11 @@ type Tuple2Value[T1, T2 any] struct {
 }
 
 type Tuple2[T1, T2 any] struct {
-	Field1 ColumnOf[T1]
-	Field2 ColumnOf[T2]
+	Field1 Of[T1]
+	Field2 Of[T2]
 }
 
-func NewTuple2[T1, T2 any](col1 ColumnOf[T1], col2 ColumnOf[T2]) *Tuple2[T1, T2] {
+func NewTuple2[T1, T2 any](col1 Of[T1], col2 Of[T2]) *Tuple2[T1, T2] {
 	return &Tuple2[T1, T2]{
 		Field1: col1,
 		Field2: col2,
@@ -75,12 +75,12 @@ type Tuple3Value[T1, T2, T3 any] struct {
 }
 
 type Tuple3[T1, T2, T3 any] struct {
-	Field1 ColumnOf[T1]
-	Field2 ColumnOf[T2]
-	Field3 ColumnOf[T3]
+	Field1 Of[T1]
+	Field2 Of[T2]
+	Field3 Of[T3]
 }
 
-func NewTuple3[T1, T2, T3 any](col1 ColumnOf[T1], col2 ColumnOf[T2], col3 ColumnOf[T3]) *Tuple3[T1, T2, T3] {
+func NewTuple3[T1, T2, T3 any](col1 Of[T1], col2 Of[T2], col3 Of[T3]) *Tuple3[T1, T2, T3] {
 	return &Tuple3[T1, T2, T3]{
 		Field1: col1,
 		Field2: col2,
@@ -150,13 +150,13 @@ type Tuple4Value[T1, T2, T3, T4 any] struct {
 }
 
 type Tuple4[T1, T2, T3, T4 any] struct {
-	Field1 ColumnOf[T1]
-	Field2 ColumnOf[T2]
-	Field3 ColumnOf[T3]
-	Field4 ColumnOf[T4]
+	Field1 Of[T1]
+	Field2 Of[T2]
+	Field3 Of[T3]
+	Field4 Of[T4]
 }
 
-func NewTuple4[T1, T2, T3, T4 any](col1 ColumnOf[T1], col2 ColumnOf[T2], col3 ColumnOf[T3], col4 ColumnOf[T4]) *Tuple4[T1, T2, T3, T4] {
+func NewTuple4[T1, T2, T3, T4 any](col1 Of[T1], col2 Of[T2], col3 Of[T3], col4 Of[T4]) *Tuple4[T1, T2, T3, T4] {
 	return &Tuple4[T1, T2, T3, T4]{
 		Field1: col1,
 		Field2: col2,
@@ -236,14 +236,14 @@ type Tuple5Value[T1, T2, T3, T4, T5 any] struct {
 }
 
 type Tuple5[T1, T2, T3, T4, T5 any] struct {
-	Field1 ColumnOf[T1]
-	Field2 ColumnOf[T2]
-	Field3 ColumnOf[T3]
-	Field4 ColumnOf[T4]
-	Field5 ColumnOf[T5]
+	Field1 Of[T1]
+	Field2 Of[T2]
+	Field3 Of[T3]
+	Field4 Of[T4]
+	Field5 Of[T5]
 }
 
-func NewTuple5[T1, T2, T3, T4, T5 any](col1 ColumnOf[T1], col2 ColumnOf[T2], col3 ColumnOf[T3], col4 ColumnOf[T4], col5 ColumnOf[T5]) *Tuple5[T1, T2, T3, T4, T5] {
+func NewTuple5[T1, T2, T3, T4, T5 any](col1 Of[T1], col2 Of[T2], col3 Of[T3], col4 Of[T4], col5 Of[T5]) *Tuple5[T1, T2, T3, T4, T5] {
 	return &Tuple5[T1, T2, T3, T4, T5]{
 		Field1: col1,
 		Field2: col2,
@@ -333,15 +333,15 @@ type Tuple6Value[T1, T2, T3, T4, T5, T6 any] struct {
 }
 
 type Tuple6[T1, T2, T3, T4, T5, T6 any] struct {
-	Field1 ColumnOf[T1]
-	Field2 ColumnOf[T2]
-	Field3 ColumnOf[T3]
-	Field4 ColumnOf[T4]
-	Field5 ColumnOf[T5]
-	Field6 ColumnOf[T6]
+	Field1 Of[T1]
+	Field2 Of[T2]
+	Field3 Of[T3]
+	Field4 Of[T4]
+	Field5 Of[T5]
+	Field6 Of[T6]
 }
 
-func NewTuple6[T1, T2, T3, T4, T5, T6 any](col1 ColumnOf[T1], col2 ColumnOf[T2], col3 ColumnOf[T3], col4 ColumnOf[T4], col5 ColumnOf[T5], col6 ColumnOf[T6]) *Tuple6[T1, T2, T3, T4, T5, T6] {
+func NewTuple6[T1, T2, T3, T4, T5, T6 any](col1 Of[T1], col2 Of[T2], col3 Of[T3], col4 Of[T4], col5 Of[T5], col6 Of[T6]) *Tuple6[T1, T2, T3, T4, T5, T6] {
 	return &Tuple6[T1, T2, T3, T4, T5, T6]{
 		Field1: col1,
 		Field2: col2,
@@ -441,16 +441,16 @@ type Tuple7Value[T1, T2, T3, T4, T5, T6, T7 any] struct {
 }
 
 type Tuple7[T1, T2, T3, T4, T5, T6, T7 any] struct {
-	Field1 ColumnOf[T1]
-	Field2 ColumnOf[T2]
-	Field3 ColumnOf[T3]
-	Field4 ColumnOf[T4]
-	Field5 ColumnOf[T5]
-	Field6 ColumnOf[T6]
-	Field7 ColumnOf[T7]
+	Field1 Of[T1]
+	Field2 Of[T2]
+	Field3 Of[T3]
+	Field4 Of[T4]
+	Field5 Of[T5]
+	Field6 Of[T6]
+	Field7 Of[T7]
 }
 
-func NewTuple7[T1, T2, T3, T4, T5, T6, T7 any](col1 ColumnOf[T1], col2 ColumnOf[T2], col3 ColumnOf[T3], col4 ColumnOf[T4], col5 ColumnOf[T5], col6 ColumnOf[T6], col7 ColumnOf[T7]) *Tuple7[T1, T2, T3, T4, T5, T6, T7] {
+func NewTuple7[T1, T2, T3, T4, T5, T6, T7 any](col1 Of[T1], col2 Of[T2], col3 Of[T3], col4 Of[T4], col5 Of[T5], col6 Of[T6], col7 Of[T7]) *Tuple7[T1, T2, T3, T4, T5, T6, T7] {
 	return &Tuple7[T1, T2, T3, T4, T5, T6, T7]{
 		Field1: col1,
 		Field2: col2,
@@ -560,17 +560,17 @@ type Tuple8Value[T1, T2, T3, T4, T5, T6, T7, T8 any] struct {
 }
 
 type Tuple8[T1, T2, T3, T4, T5, T6, T7, T8 any] struct {
-	Field1 ColumnOf[T1]
-	Field2 ColumnOf[T2]
-	Field3 ColumnOf[T3]
-	Field4 ColumnOf[T4]
-	Field5 ColumnOf[T5]
-	Field6 ColumnOf[T6]
-	Field7 ColumnOf[T7]
-	Field8 ColumnOf[T8]
+	Field1 Of[T1]
+	Field2 Of[T2]
+	Field3 Of[T3]
+	Field4 Of[T4]
+	Field5 Of[T5]
+	Field6 Of[T6]
+	Field7 Of[T7]
+	Field8 Of[T8]
 }
 
-func NewTuple8[T1, T2, T3, T4, T5, T6, T7, T8 any](col1 ColumnOf[T1], col2 ColumnOf[T2], col3 ColumnOf[T3], col4 ColumnOf[T4], col5 ColumnOf[T5], col6 ColumnOf[T6], col7 ColumnOf[T7], col8 ColumnOf[T8]) *Tuple8[T1, T2, T3, T4, T5, T6, T7, T8] {
+func NewTuple8[T1, T2, T3, T4, T5, T6, T7, T8 any](col1 Of[T1], col2 Of[T2], col3 Of[T3], col4 Of[T4], col5 Of[T5], col6 Of[T6], col7 Of[T7], col8 Of[T8]) *Tuple8[T1, T2, T3, T4, T5, T6, T7, T8] {
 	return &Tuple8[T1, T2, T3, T4, T5, T6, T7, T8]{
 		Field1: col1,
 		Field2: col2,
@@ -690,18 +690,18 @@ type Tuple9Value[T1, T2, T3, T4, T5, T6, T7, T8, T9 any] struct {
 }
 
 type Tuple9[T1, T2, T3, T4, T5, T6, T7, T8, T9 any] struct {
-	Field1 ColumnOf[T1]
-	Field2 ColumnOf[T2]
-	Field3 ColumnOf[T3]
-	Field4 ColumnOf[T4]
-	Field5 ColumnOf[T5]
-	Field6 ColumnOf[T6]
-	Field7 ColumnOf[T7]
-	Field8 ColumnOf[T8]
-	Field9 ColumnOf[T9]
+	Field1 Of[T1]
+	Field2 Of[T2]
+	Field3 Of[T3]
+	Field4 Of[T4]
+	Field5 Of[T5]
+	Field6 Of[T6]
+	Field7 Of[T7]
+	Field8 Of[T8]
+	Field9 Of[T9]
 }
 
-func NewTuple9[T1, T2, T3, T4, T5, T6, T7, T8, T9 any](col1 ColumnOf[T1], col2 ColumnOf[T2], col3 ColumnOf[T3], col4 ColumnOf[T4], col5 ColumnOf[T5], col6 ColumnOf[T6], col7 ColumnOf[T7], col8 ColumnOf[T8], col9 ColumnOf[T9]) *Tuple9[T1, T2, T3, T4, T5, T6, T7, T8, T9] {
+func NewTuple9[T1, T2, T3, T4, T5, T6, T7, T8, T9 any](col1 Of[T1], col2 Of[T2], col3 Of[T3], col4 Of[T4], col5 Of[T5], col6 Of[T6], col7 Of[T7], col8 Of[T8], col9 Of[T9]) *Tuple9[T1, T2, T3, T4, T5, T6, T7, T8, T9] {
 	return &Tuple9[T1, T2, T3, T4, T5, T6, T7, T8, T9]{
 		Field1: col1,
 		Field2: col2,
@@ -831,19 +831,19 @@ type Tuple10Value[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10 any] struct {
 }
 
 type Tuple10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10 any] struct {
-	Field1  ColumnOf[T1]
-	Field2  ColumnOf[T2]
-	Field3  ColumnOf[T3]
-	Field4  ColumnOf[T4]
-	Field5  ColumnOf[T5]
-	Field6  ColumnOf[T6]
-	Field7  ColumnOf[T7]
-	Field8  ColumnOf[T8]
-	Field9  ColumnOf[T9]
-	Field10 ColumnOf[T10]
+	Field1  Of[T1]
+	Field2  Of[T2]
+	Field3  Of[T3]
+	Field4  Of[T4]
+	Field5  Of[T5]
+	Field6  Of[T6]
+	Field7  Of[T7]
+	Field8  Of[T8]
+	Field9  Of[T9]
+	Field10 Of[T10]
 }
 
-func NewTuple10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10 any](col1 ColumnOf[T1], col2 ColumnOf[T2], col3 ColumnOf[T3], col4 ColumnOf[T4], col5 ColumnOf[T5], col6 ColumnOf[T6], col7 ColumnOf[T7], col8 ColumnOf[T8], col9 ColumnOf[T9], col10 ColumnOf[T10]) *Tuple10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10] {
+func NewTuple10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10 any](col1 Of[T1], col2 Of[T2], col3 Of[T3], col4 Of[T4], col5 Of[T5], col6 Of[T6], col7 Of[T7], col8 Of[T8], col9 Of[T9], col10 Of[T10]) *Tuple10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10] {
 	return &Tuple10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]{
 		Field1:  col1,
 		Field2:  col2,
@@ -983,20 +983,20 @@ type Tuple11Value[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11 any] struct {
 }
 
 type Tuple11[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11 any] struct {
-	Field1  ColumnOf[T1]
-	Field2  ColumnOf[T2]
-	Field3  ColumnOf[T3]
-	Field4  ColumnOf[T4]
-	Field5  ColumnOf[T5]
-	Field6  ColumnOf[T6]
-	Field7  ColumnOf[T7]
-	Field8  ColumnOf[T8]
-	Field9  ColumnOf[T9]
-	Field10 ColumnOf[T10]
-	Field11 ColumnOf[T11]
+	Field1  Of[T1]
+	Field2  Of[T2]
+	Field3  Of[T3]
+	Field4  Of[T4]
+	Field5  Of[T5]
+	Field6  Of[T6]
+	Field7  Of[T7]
+	Field8  Of[T8]
+	Field9  Of[T9]
+	Field10 Of[T10]
+	Field11 Of[T11]
 }
 
-func NewTuple11[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11 any](col1 ColumnOf[T1], col2 ColumnOf[T2], col3 ColumnOf[T3], col4 ColumnOf[T4], col5 ColumnOf[T5], col6 ColumnOf[T6], col7 ColumnOf[T7], col8 ColumnOf[T8], col9 ColumnOf[T9], col10 ColumnOf[T10], col11 ColumnOf[T11]) *Tuple11[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11] {
+func NewTuple11[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11 any](col1 Of[T1], col2 Of[T2], col3 Of[T3], col4 Of[T4], col5 Of[T5], col6 Of[T6], col7 Of[T7], col8 Of[T8], col9 Of[T9], col10 Of[T10], col11 Of[T11]) *Tuple11[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11] {
 	return &Tuple11[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11]{
 		Field1:  col1,
 		Field2:  col2,
@@ -1146,21 +1146,21 @@ type Tuple12Value[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12 any] struct 
 }
 
 type Tuple12[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12 any] struct {
-	Field1  ColumnOf[T1]
-	Field2  ColumnOf[T2]
-	Field3  ColumnOf[T3]
-	Field4  ColumnOf[T4]
-	Field5  ColumnOf[T5]
-	Field6  ColumnOf[T6]
-	Field7  ColumnOf[T7]
-	Field8  ColumnOf[T8]
-	Field9  ColumnOf[T9]
-	Field10 ColumnOf[T10]
-	Field11 ColumnOf[T11]
-	Field12 ColumnOf[T12]
+	Field1  Of[T1]
+	Field2  Of[T2]
+	Field3  Of[T3]
+	Field4  Of[T4]
+	Field5  Of[T5]
+	Field6  Of[T6]
+	Field7  Of[T7]
+	Field8  Of[T8]
+	Field9  Of[T9]
+	Field10 Of[T10]
+	Field11 Of[T11]
+	Field12 Of[T12]
 }
 
-func NewTuple12[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12 any](col1 ColumnOf[T1], col2 ColumnOf[T2], col3 ColumnOf[T3], col4 ColumnOf[T4], col5 ColumnOf[T5], col6 ColumnOf[T6], col7 ColumnOf[T7], col8 ColumnOf[T8], col9 ColumnOf[T9], col10 ColumnOf[T10], col11 ColumnOf[T11], col12 ColumnOf[T12]) *Tuple12[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12] {
+func NewTuple12[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12 any](col1 Of[T1], col2 Of[T2], col3 Of[T3], col4 Of[T4], col5 Of[T5], col6 Of[T6], col7 Of[T7], col8 Of[T8], col9 Of[T9], col10 Of[T10], col11 Of[T11], col12 Of[T12]) *Tuple12[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12] {
 	return &Tuple12[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12]{
 		Field1:  col1,
 		Field2:  col2,

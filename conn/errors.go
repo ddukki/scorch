@@ -7,7 +7,7 @@ type Kind int
 
 const (
 	// KindNetwork is a network-level error (dial, read, write).
-	KindNetwork  Kind = iota
+	KindNetwork Kind = iota
 	// KindProtocol is a protocol-level error (unexpected packet, etc.).
 	KindProtocol
 	// KindConfig is a configuration error (invalid DSN, etc.).
@@ -20,10 +20,10 @@ const (
 
 // Error represents a scorch error with a Kind and optional wrapped error.
 type Error struct {
-	Kind    Kind
-	Message string
+	Kind       Kind
+	Message    string
 	ServerCode int
-	Err     error
+	Err        error
 }
 
 func (e *Error) Error() string {

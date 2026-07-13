@@ -7,6 +7,7 @@ import (
 
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/ddukki/scorch/column"
+	"github.com/stretchr/testify/require"
 )
 
 // TestFuzzRoundtripE2E exercises a full encode → Insert → Select → decode
@@ -14,7 +15,7 @@ import (
 // roundtripping through the server's native protocol.
 func TestFuzzRoundtripE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() { require.NoError(t, c.Close()) }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -214,8 +215,12 @@ func TestFuzzRoundtripE2E(t *testing.T) {
 			func(t *testing.T, col Column) {
 				c := col.(*column.Nullable[uint64])
 				// ORDER BY sorts: NULLs last, so positions are [1, 3, NULL]
-				if c.Nulls[0] || c.Nulls[1] { t.Fatal("rows 0,1 should be non-null") }
-				if !c.Nulls[2] { t.Fatal("row 2 should be null") }
+				if c.Nulls[0] || c.Nulls[1] {
+					t.Fatal("rows 0,1 should be non-null")
+				}
+				if !c.Nulls[2] {
+					t.Fatal("row 2 should be null")
+				}
 				if c.Values.Row(0) != 1 || c.Values.Row(1) != 3 {
 					t.Fatalf("nullable uint64 values: got %d %d", c.Values.Row(0), c.Values.Row(1))
 				}
@@ -233,8 +238,12 @@ func TestFuzzRoundtripE2E(t *testing.T) {
 			func(t *testing.T, col Column) {
 				c := col.(*column.Nullable[string])
 				// ORDER BY sorts: ''a' < 'c', NULLs last → positions [a, c, NULL]
-				if c.Nulls[0] || c.Nulls[1] { t.Fatal("rows 0,1 should be non-null") }
-				if !c.Nulls[2] { t.Fatal("row 2 should be null") }
+				if c.Nulls[0] || c.Nulls[1] {
+					t.Fatal("rows 0,1 should be non-null")
+				}
+				if !c.Nulls[2] {
+					t.Fatal("row 2 should be null")
+				}
 				if c.Values.Row(0) != "a" || c.Values.Row(1) != "c" {
 					t.Fatalf("nullable str values: got %q %q", c.Values.Row(0), c.Values.Row(1))
 				}
@@ -276,7 +285,7 @@ func TestFuzzRoundtripE2E(t *testing.T) {
 // the caller provides wrong column count.
 func TestFuzzColumnCountMismatchE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() { require.NoError(t, c.Close()) }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -298,7 +307,7 @@ func TestFuzzColumnCountMismatchE2E(t *testing.T) {
 // TestFuzzEmptyResultSet selects from an empty table.
 func TestFuzzEmptyResultSetE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() { require.NoError(t, c.Close()) }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -327,7 +336,7 @@ func TestFuzzEmptyResultSetE2E(t *testing.T) {
 // TestFuzzManyRows selects a table with many rows to stress the response loop.
 func TestFuzzManyRowsE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() { require.NoError(t, c.Close()) }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -367,7 +376,7 @@ func TestFuzzManyRowsE2E(t *testing.T) {
 // SELECT response processing, and that set callbacks are invoked without error.
 func TestFuzzCallbackCrashE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() { require.NoError(t, c.Close()) }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -402,7 +411,7 @@ func TestFuzzCallbackCrashE2E(t *testing.T) {
 // verify SELECT can decode heterogeneous columns.
 func TestFuzzSelectAllTypesE2E(t *testing.T) {
 	c := connectE2E(t)
-	defer c.Close()
+	defer func() { require.NoError(t, c.Close()) }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+
+echo "=== golangci-lint ==="
+golangci-lint run ./...
+
+echo "=== go vet ==="
+go vet ./...

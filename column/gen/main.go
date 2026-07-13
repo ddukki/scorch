@@ -41,7 +41,7 @@ func buildCode() string {
 		// TupleN
 		fmt.Fprintf(&b, "type Tuple%d[%s any] struct {\n", n, ta)
 		for i := 0; i < n; i++ {
-			fmt.Fprintf(&b, "\tField%d ColumnOf[T%d]\n", i+1, i+1)
+			fmt.Fprintf(&b, "\tField%d Of[T%d]\n", i+1, i+1)
 		}
 		b.WriteString("}\n\n")
 
@@ -51,7 +51,7 @@ func buildCode() string {
 			if i > 0 {
 				b.WriteString(", ")
 			}
-			fmt.Fprintf(&b, "col%d ColumnOf[T%d]", i+1, i+1)
+			fmt.Fprintf(&b, "col%d Of[T%d]", i+1, i+1)
 		}
 		fmt.Fprintf(&b, ") *Tuple%d[%s] {\n", n, ta)
 		fmt.Fprintf(&b, "\treturn &Tuple%d[%s]{\n", n, ta)

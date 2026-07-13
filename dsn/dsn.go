@@ -36,7 +36,7 @@ type ErrorKind int
 
 const (
 	// KindParse is a DSN parse error.
-	KindParse    ErrorKind = iota
+	KindParse ErrorKind = iota
 	// KindSecurity is a security validation error.
 	KindSecurity
 	// KindScheme is an unsupported URL scheme error.
@@ -85,21 +85,21 @@ func Parse(dsn string) (Config, error) {
 			return Config{}, &Error{Kind: KindParse, Message: fmt.Sprintf("empty host segment at position %d", i)}
 		}
 		var host, port string
-	if strings.Contains(h, ":") {
-		var err error
-		host, port, err = net.SplitHostPort(h)
-		if err != nil {
-			return Config{}, &Error{Kind: KindParse, Message: fmt.Sprintf("invalid host %q", h), Err: err}
+		if strings.Contains(h, ":") {
+			var err error
+			host, port, err = net.SplitHostPort(h)
+			if err != nil {
+				return Config{}, &Error{Kind: KindParse, Message: fmt.Sprintf("invalid host %q", h), Err: err}
+			}
+		} else {
+			host = h
 		}
-	} else {
-		host = h
-	}
-	if host == "" {
-		return Config{}, &Error{Kind: KindParse, Message: fmt.Sprintf("empty host at position %d", i)}
-	}
-	if port == "" {
-		h = net.JoinHostPort(host, "9000")
-	}
+		if host == "" {
+			return Config{}, &Error{Kind: KindParse, Message: fmt.Sprintf("empty host at position %d", i)}
+		}
+		if port == "" {
+			h = net.JoinHostPort(host, "9000")
+		}
 		addrs = append(addrs, h)
 	}
 	if len(addrs) == 0 {

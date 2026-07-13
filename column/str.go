@@ -12,9 +12,9 @@ import (
 type Str struct {
 	name string
 	Data []string
-	buf  []byte  // contiguous string data
-	pos  []int   // start offsets into buf; sentinel at len(pos)-1
-	vib  []byte  // 1-byte read buffer for inline UVarint (heap-resident, no escape)
+	buf  []byte // contiguous string data
+	pos  []int  // start offsets into buf; sentinel at len(pos)-1
+	vib  []byte // 1-byte read buffer for inline UVarint (heap-resident, no escape)
 }
 
 // NewStr creates a Str column with the given column name.
@@ -49,18 +49,25 @@ func (c *Str) readUVarint(r *proto.Reader) (int, error) {
 	return 0, errors.New("uvarint overflow")
 }
 
+// Name returns the column name.
 func (c *Str) Name() string { return c.name }
 
+// Type returns proto.ColumnTypeString.
 func (c *Str) Type() proto.ColumnType { return proto.ColumnTypeString }
 
+// Len returns the number of elements in the column.
 func (c *Str) Len() int { return len(c.Data) }
 
+// Append adds a single string value to the column.
 func (c *Str) Append(v string) { c.Data = append(c.Data, v) }
 
+// AppendArr adds multiple string values to the column.
 func (c *Str) AppendArr(v []string) { c.Data = append(c.Data, v...) }
 
+// Row returns the value at index i.
 func (c *Str) Row(i int) string { return c.Data[i] }
 
+// DecodeColumn decodes string rows from the wire protocol.
 func (c *Str) DecodeColumn(r *proto.Reader, rows int) error {
 	if rows == 0 {
 		c.Data = c.Data[:0]
@@ -120,6 +127,7 @@ func (c *Str) DecodeColumn(r *proto.Reader, rows int) error {
 	return nil
 }
 
+// EncodeColumn encodes string data to the wire buffer.
 func (c *Str) EncodeColumn(b *proto.Buffer) error {
 	for _, v := range c.Data {
 		b.PutString(v)
@@ -127,6 +135,7 @@ func (c *Str) EncodeColumn(b *proto.Buffer) error {
 	return nil
 }
 
+// WriteColumn writes the string column to the wire writer.
 func (c *Str) WriteColumn(w *proto.Writer) {
 	w.ChainBuffer(func(b *proto.Buffer) {
 		for _, v := range c.Data {

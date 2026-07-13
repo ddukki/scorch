@@ -6,8 +6,8 @@ import (
 	"github.com/ddukki/scorch/conn"
 )
 
-// PoolConfig configures a connection pool.
-type PoolConfig struct {
+// Config configures a connection pool.
+type Config struct {
 	Addrs []string
 	conn.Config
 

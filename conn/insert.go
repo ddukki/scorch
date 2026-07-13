@@ -7,6 +7,7 @@ import (
 	"github.com/ClickHouse/ch-go/proto"
 )
 
+// Insert executes an INSERT query with the given columns.
 func (c *Conn) Insert(ctx context.Context, query string, cols ...Column) error {
 	if err := c.lock(); err != nil {
 		return err

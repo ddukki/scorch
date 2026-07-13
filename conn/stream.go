@@ -34,6 +34,7 @@ type InsertStream struct {
 	release func()
 }
 
+// SelectStream starts a streaming SELECT query.
 func (c *Conn) SelectStream(ctx context.Context, query string) (*SelectStream, error) {
 	if err := c.lock(); err != nil {
 		return nil, err
@@ -59,11 +60,13 @@ func (c *Conn) SelectStream(ctx context.Context, query string) (*SelectStream, e
 	}, nil
 }
 
+// Bind binds columns to a SelectStream for reading results.
 func (s *SelectStream) Bind(cols ...Column) {
 	s.cols = cols
 	s.bound = true
 }
 
+// Next reads the next block of results. Returns false when done.
 func (s *SelectStream) Next() bool {
 	if s.closed || s.done {
 		return false
@@ -265,6 +268,7 @@ func (s *SelectStream) Next() bool {
 	}
 }
 
+// Cancel cancels the stream and drains remaining server data.
 func (s *SelectStream) Cancel() {
 	if s.closed || s.done {
 		return
@@ -286,27 +290,42 @@ func (s *SelectStream) cancel() {
 		}
 		switch proto.ServerCode(code) {
 		case proto.ServerCodeData:
-			c.skipBlock(proto.ServerCodeData)
+			if c.skipBlock(proto.ServerCodeData) != nil {
+				return
+			}
 		case proto.ServerCodeProgress:
 			var p proto.Progress
-			p.DecodeAware(c.reader, c.server.Revision)
+			if err := p.DecodeAware(c.reader, c.server.Revision); err != nil {
+				return
+			}
 		case proto.ServerCodeProfile:
 			var p proto.Profile
-			p.DecodeAware(c.reader, c.server.Revision)
+			if err := p.DecodeAware(c.reader, c.server.Revision); err != nil {
+				return
+			}
 		case proto.ServerCodeException:
 			var ex proto.Exception
-			ex.DecodeAware(c.reader, c.server.Revision)
+			if err := ex.DecodeAware(c.reader, c.server.Revision); err != nil {
+				return
+			}
 		case proto.ServerProfileEvents, proto.ServerCodeLog:
-			c.skipBlock(proto.ServerProfileEvents)
+			if c.skipBlock(proto.ServerProfileEvents) != nil {
+				return
+			}
 		case proto.ServerCodeTotals, proto.ServerCodeExtremes:
-			c.skipBlock(proto.ServerCodeTotals)
+			if c.skipBlock(proto.ServerCodeTotals) != nil {
+				return
+			}
 		case proto.ServerCodeTableColumns:
 			var tc proto.TableColumns
-			tc.DecodeAware(c.reader, int(c.server.Revision))
+			if err := tc.DecodeAware(c.reader, int(c.server.Revision)); err != nil {
+				return
+			}
 		}
 	}
 }
 
+// Close closes the stream and calls the release function.
 func (s *SelectStream) Close() error {
 	if s.closed {
 		return nil
@@ -321,24 +340,29 @@ func (s *SelectStream) Close() error {
 	return s.err
 }
 
+// SetRelease sets a function to be called when the stream is done or closed.
 func (s *SelectStream) SetRelease(fn func()) {
 	s.release = fn
 }
 
+// Release manually triggers the release callback.
 func (s *SelectStream) Release() {
 	if s.release != nil {
 		s.release()
 	}
 }
 
+// Err returns any error encountered during streaming.
 func (s *SelectStream) Err() error {
 	return s.err
 }
 
+// BlockRows returns the number of rows in the last read block.
 func (s *SelectStream) BlockRows() int {
 	return s.blockRows
 }
 
+// InsertStream starts a streaming INSERT query.
 func (c *Conn) InsertStream(ctx context.Context, query string) (*InsertStream, error) {
 	if err := c.lock(); err != nil {
 		return nil, err
@@ -370,11 +394,13 @@ func (c *Conn) InsertStream(ctx context.Context, query string) (*InsertStream, e
 	}, nil
 }
 
+// Bind binds columns to an InsertStream for writing data.
 func (s *InsertStream) Bind(cols ...Column) {
 	s.cols = cols
 	s.bound = true
 }
 
+// Append writes the current column data as a block.
 func (s *InsertStream) Append() error {
 	if s.closed {
 		return &Error{Kind: KindInternal, Message: "stream is closed"}
@@ -425,10 +451,12 @@ func (s *InsertStream) Append() error {
 	return nil
 }
 
+// SetRelease sets a function to be called when the stream is closed.
 func (s *InsertStream) SetRelease(fn func()) {
 	s.release = fn
 }
 
+// Close finalises the stream by sending an empty block and closing the connection.
 func (s *InsertStream) Close() error {
 	if s.closed {
 		return nil

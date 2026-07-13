@@ -16,8 +16,7 @@ import (
 
 type dumpConn struct {
 	net.Conn
-	prefix string
-	mu     sync.Mutex
+	mu sync.Mutex
 }
 
 func (d *dumpConn) Write(b []byte) (int, error) {
@@ -51,7 +50,7 @@ func TestConnectInsertDebug(t *testing.T) {
 		t.Fatalf("dial: %v", err)
 	}
 	dump := &dumpConn{Conn: raw}
-	defer dump.Close()
+	defer func() { _ = dump.Close() }()
 
 	buf := new(proto.Buffer)
 	w := proto.NewWriter(dump, buf)
@@ -77,7 +76,9 @@ func TestConnectInsertDebug(t *testing.T) {
 	}
 	if proto.ServerCode(code) != proto.ServerCodeHello {
 		var ex proto.Exception
-		ex.DecodeAware(r, proto.Version)
+		if err := ex.DecodeAware(r, proto.Version); err != nil {
+			t.Fatalf("decode exception: %v", err)
+		}
 		t.Fatalf("expected hello: %+v", ex)
 	}
 	var sh proto.ServerHello
@@ -113,7 +114,7 @@ func TestConnectInsertDebug(t *testing.T) {
 		server:    sh,
 		localAddr: raw.LocalAddr(),
 	}
-	defer c.Close()
+	defer func() { _ = c.Close() }()
 
 	// Now use the scorch Insert
 	idCol := column.NewBase[uint64]("id")
@@ -138,7 +139,7 @@ func TestMinimalInsertDebug(t *testing.T) {
 		t.Fatalf("dial: %v", err)
 	}
 	dump := &dumpConn{Conn: raw}
-	defer dump.Close()
+	defer func() { _ = dump.Close() }()
 
 	buf := new(proto.Buffer)
 	w := proto.NewWriter(dump, buf)
@@ -164,7 +165,9 @@ func TestMinimalInsertDebug(t *testing.T) {
 	}
 	if proto.ServerCode(code) != proto.ServerCodeHello {
 		var ex proto.Exception
-		ex.DecodeAware(r, proto.Version)
+		if err := ex.DecodeAware(r, proto.Version); err != nil {
+			t.Fatalf("decode exception: %v", err)
+		}
 		t.Fatalf("expected hello: %+v", ex)
 	}
 	var sh proto.ServerHello
@@ -195,9 +198,9 @@ func TestMinimalInsertDebug(t *testing.T) {
 		Major:           24,
 		Minor:           3,
 		Interface:       proto.InterfaceTCP,
-		Query:            proto.ClientQueryInitial,
-		ClientName:        "scorch",
-		InitialAddress:   localAddr,
+		Query:           proto.ClientQueryInitial,
+		ClientName:      "scorch",
+		InitialAddress:  localAddr,
 	}
 
 	fmt.Fprintf(os.Stderr, "=== INSERT QUERY + BLANK (query+blank in one flush) ===\n")
@@ -232,11 +235,15 @@ readLoop:
 		switch proto.ServerCode(code) {
 		case proto.ServerCodeData:
 			if proto.FeatureTempTables.In(sh.Revision) {
-				r.Str()
+				if _, err := r.Str(); err != nil {
+					t.Fatalf("read temp table: %v", err)
+				}
 			}
 			if proto.FeatureBlockInfo.In(sh.Revision) {
 				var bi proto.BlockInfo
-				bi.Decode(r)
+				if err := bi.Decode(r); err != nil {
+					t.Fatalf("decode block info: %v", err)
+				}
 			}
 			cols, _ := r.Int()
 			rows, _ := r.Int()
@@ -245,7 +252,9 @@ readLoop:
 				n, _ := r.Str()
 				ty, _ := r.Str()
 				if proto.FeatureCustomSerialization.In(sh.Revision) {
-					r.Bool()
+					if _, err := r.Bool(); err != nil {
+						t.Fatalf("read custom serialization: %v", err)
+					}
 				}
 				t.Logf("  col %d: %q %q", i, n, ty)
 				_ = n
@@ -264,15 +273,21 @@ readLoop:
 			t.Fatal("Unexpected EndOfStream")
 		case proto.ServerCodeException:
 			var ex proto.Exception
-			ex.DecodeAware(r, sh.Revision)
+			if err := ex.DecodeAware(r, sh.Revision); err != nil {
+				t.Fatalf("decode exception: %v", err)
+			}
 			t.Fatalf("Exception: %s (code %d)", ex.Message, ex.Code)
 		case proto.ServerCodeProgress:
 			var p proto.Progress
-			p.DecodeAware(r, sh.Revision)
+			if err := p.DecodeAware(r, sh.Revision); err != nil {
+				t.Fatalf("decode progress: %v", err)
+			}
 			t.Logf("Progress: %+v", p)
 		case proto.ServerCodeTableColumns:
 			var tc proto.TableColumns
-			tc.DecodeAware(r, sh.Revision)
+			if err := tc.DecodeAware(r, sh.Revision); err != nil {
+				t.Fatalf("decode table columns: %v", err)
+			}
 			t.Logf("TableColumns: %q", tc)
 		default:
 			t.Logf("Server code: %d", code)
@@ -285,7 +300,7 @@ readLoop:
 
 	// Now send data block + end block
 	fmt.Fprintf(os.Stderr, "=== INSERT DATA+BEGIN+END WITH ch-go STYLE ENCODING ===\n")
-	
+
 	// ch-go uses Block.WriteBlock which calls:
 	// Block.EncodeBlock(buf, version, input):
 	//   1. FeatureBlockInfo → b.Info.Encode(buf)
@@ -293,7 +308,7 @@ readLoop:
 	//      - PutInt(b.Columns)
 	//      - PutInt(b.Rows)
 	//      - for each col: EncodeStart, Prepare, EncodeState, EncodeColumn
-	
+
 	// Column order: metadata + data per column, interleaved — matching ch-go's
 	// WriteBlock/EncodeRawBlock iteration order. The server expects per-column
 	// interleaving: col0 meta → col0 data → col1 meta → col1 data.
@@ -324,7 +339,7 @@ readLoop:
 		}
 		b.PutString("hello")
 	})
-	
+
 	// End block (blank block - signals end of INSERT data)
 	w.ChainBuffer(func(b *proto.Buffer) {
 		proto.ClientCodeData.Encode(b)
@@ -332,7 +347,7 @@ readLoop:
 		block := proto.Block{Info: proto.BlockInfo{BucketNum: 0}}
 		block.EncodeAware(b, sh.Revision)
 	})
-	
+
 	if _, err := w.Flush(); err != nil {
 		t.Fatalf("flush data+end: %v", err)
 	}
@@ -354,12 +369,18 @@ readLoop:
 				return
 			case proto.ServerCodeException:
 				var ex proto.Exception
-				ex.DecodeAware(r, sh.Revision)
+				if err := ex.DecodeAware(r, sh.Revision); err != nil {
+					done <- fmt.Errorf("decode exception: %w", err)
+					return
+				}
 				done <- fmt.Errorf("%s (code %d)", ex.Message, ex.Code)
 				return
 			case proto.ServerCodeProgress:
 				var p proto.Progress
-				p.DecodeAware(r, sh.Revision)
+				if err := p.DecodeAware(r, sh.Revision); err != nil {
+					done <- fmt.Errorf("decode progress: %w", err)
+					return
+				}
 				t.Logf("Progress: %+v", p)
 			case proto.ServerCodeData:
 				t.Log("Got unexpected Data")
@@ -391,7 +412,10 @@ readLoop:
 				_ = rows
 			case proto.ServerCodeProfile:
 				var p proto.Profile
-				p.DecodeAware(r, sh.Revision)
+				if err := p.DecodeAware(r, sh.Revision); err != nil {
+					done <- fmt.Errorf("decode profile: %w", err)
+					return
+				}
 				t.Logf("Profile: rows=%d blocks=%d bytes=%d", p.Rows, p.Blocks, p.Bytes)
 			case proto.ServerProfileEvents:
 				t.Log("Skipping ProfileEvents block")
@@ -435,7 +459,7 @@ func TestQueryHexDumpE2E(t *testing.T) {
 		t.Fatalf("dial: %v", err)
 	}
 	dump := &dumpConn{Conn: raw}
-	defer dump.Close()
+	defer func() { _ = dump.Close() }()
 
 	buf := new(proto.Buffer)
 	w := proto.NewWriter(dump, buf)
@@ -462,7 +486,9 @@ func TestQueryHexDumpE2E(t *testing.T) {
 	}
 	if proto.ServerCode(code) != proto.ServerCodeHello {
 		var ex proto.Exception
-		ex.DecodeAware(r, proto.Version)
+		if err := ex.DecodeAware(r, proto.Version); err != nil {
+			t.Fatalf("decode exception: %v", err)
+		}
 		t.Fatalf("expected hello: %+v", ex)
 	}
 	var sh proto.ServerHello
@@ -517,11 +543,15 @@ func TestQueryHexDumpE2E(t *testing.T) {
 		switch proto.ServerCode(code) {
 		case proto.ServerCodeData:
 			if proto.FeatureTempTables.In(sh.Revision) {
-				r.Str()
+				if _, err := r.Str(); err != nil {
+					t.Fatalf("read temp table: %v", err)
+				}
 			}
 			if proto.FeatureBlockInfo.In(sh.Revision) {
 				var bi proto.BlockInfo
-				bi.Decode(r)
+				if err := bi.Decode(r); err != nil {
+					t.Fatalf("decode block info: %v", err)
+				}
 			}
 			cols, _ := r.Int()
 			rows, _ := r.Int()
@@ -530,26 +560,40 @@ func TestQueryHexDumpE2E(t *testing.T) {
 				continue
 			}
 			for i := 0; i < int(cols); i++ {
-				r.Str()
-				r.Str()
+				if _, err := r.Str(); err != nil {
+					t.Fatalf("read col name: %v", err)
+				}
+				if _, err := r.Str(); err != nil {
+					t.Fatalf("read col type: %v", err)
+				}
 				if proto.FeatureCustomSerialization.In(sh.Revision) {
-					r.Bool()
+					if _, err := r.Bool(); err != nil {
+						t.Fatalf("read custom serialization: %v", err)
+					}
 				}
 			}
 		case proto.ServerCodeProgress:
 			var p proto.Progress
-			p.DecodeAware(r, sh.Revision)
+			if err := p.DecodeAware(r, sh.Revision); err != nil {
+				t.Fatalf("decode progress: %v", err)
+			}
 			t.Logf("Progress: rows=%d bytes=%d", p.Rows, p.Bytes)
 		case proto.ServerCodeProfile:
 			var p proto.Profile
-			p.DecodeAware(r, sh.Revision)
+			if err := p.DecodeAware(r, sh.Revision); err != nil {
+				t.Fatalf("decode profile: %v", err)
+			}
 			t.Logf("Profile: rows=%d blocks=%d bytes=%d", p.Rows, p.Blocks, p.Bytes)
 		case proto.ServerProfileEvents:
 			t.Log("Skipping ProfileEvents block")
-			skipRawBlock(r, sh.Revision)
+			if err := skipRawBlock(r, sh.Revision); err != nil {
+				t.Fatalf("skip raw block: %v", err)
+			}
 		case proto.ServerCodeException:
 			var ex proto.Exception
-			ex.DecodeAware(r, sh.Revision)
+			if err := ex.DecodeAware(r, sh.Revision); err != nil {
+				t.Fatalf("decode exception: %v", err)
+			}
 			t.Fatalf("Exception: %s (code %d)", ex.Message, ex.Code)
 		case proto.ServerCodeEndOfStream:
 			t.Log("EndOfStream")
@@ -615,34 +659,52 @@ func execQueryOnConn(w *proto.Writer, r *proto.Reader, rev int, addr string, que
 			return
 		case proto.ServerCodeException:
 			var ex proto.Exception
-			ex.DecodeAware(r, rev)
+			if err := ex.DecodeAware(r, rev); err != nil {
+				t.Fatalf("decode exception: %v", err)
+			}
 			t.Fatalf("DDL %q: %s (code %d)", query, ex.Message, ex.Code)
 		case proto.ServerCodeProgress:
 			var p proto.Progress
-			p.DecodeAware(r, rev)
+			if err := p.DecodeAware(r, rev); err != nil {
+				t.Fatalf("decode progress: %v", err)
+			}
 		case proto.ServerCodeData:
 			if proto.FeatureTempTables.In(rev) {
-				r.Str()
+				if _, err := r.Str(); err != nil {
+					t.Fatalf("read temp table: %v", err)
+				}
 			}
 			if proto.FeatureBlockInfo.In(rev) {
 				var bi proto.BlockInfo
-				bi.Decode(r)
+				if err := bi.Decode(r); err != nil {
+					t.Fatalf("decode block info: %v", err)
+				}
 			}
 			cols, _ := r.Int()
 			rows, _ := r.Int()
 			for i := 0; i < int(cols); i++ {
-				r.Str()
-				r.Str()
+				if _, err := r.Str(); err != nil {
+					t.Fatalf("read col name: %v", err)
+				}
+				if _, err := r.Str(); err != nil {
+					t.Fatalf("read col type: %v", err)
+				}
 				if proto.FeatureCustomSerialization.In(rev) {
-					r.Bool()
+					if _, err := r.Bool(); err != nil {
+						t.Fatalf("read custom serialization: %v", err)
+					}
 				}
 				if rows > 0 {
-					r.Read(make([]byte, 1024))
+					if _, err := r.Read(make([]byte, 1024)); err != nil {
+						t.Fatalf("read col data: %v", err)
+					}
 				}
 			}
 		case proto.ServerCodeTableColumns:
 			var tc proto.TableColumns
-			tc.DecodeAware(r, rev)
+			if err := tc.DecodeAware(r, rev); err != nil {
+				t.Fatalf("decode table columns: %v", err)
+			}
 		}
 	}
 }

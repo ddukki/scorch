@@ -7,6 +7,7 @@ import (
 	"github.com/ClickHouse/ch-go/proto"
 )
 
+// Exec executes a DDL/DML query that returns no result rows.
 func (c *Conn) Exec(ctx context.Context, query string) error {
 	if err := c.lock(); err != nil {
 		return err
@@ -84,6 +85,7 @@ func (c *Conn) Exec(ctx context.Context, query string) error {
 	}
 }
 
+// Ping sends a ping to verify the connection is alive.
 func (c *Conn) Ping(ctx context.Context) error {
 	if err := c.lock(); err != nil {
 		return err
@@ -223,21 +225,6 @@ func (c *Conn) readColumnInfoBlock() error {
 				return &Error{Kind: KindProtocol, Message: "read custom serialization", Err: err}
 			}
 		}
-	}
-	return nil
-}
-
-func (c *Conn) sendEmptyBlock() error {
-	c.writer.ChainBuffer(func(b *proto.Buffer) {
-		proto.ClientCodeData.Encode(b)
-		proto.ClientData{}.EncodeAware(b, c.server.Revision)
-		block := proto.Block{
-			Info: proto.BlockInfo{BucketNum: 0},
-		}
-		block.EncodeAware(b, c.server.Revision)
-	})
-	if _, err := c.writer.Flush(); err != nil {
-		return &Error{Kind: KindNetwork, Message: "flush empty block", Err: err}
 	}
 	return nil
 }
