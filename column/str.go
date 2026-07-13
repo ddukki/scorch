@@ -1,6 +1,8 @@
 package column
 
 import (
+	"errors"
+	"io"
 	"unsafe"
 
 	"github.com/ClickHouse/ch-go/proto"
@@ -11,10 +13,38 @@ type Str struct {
 	Data []string
 	buf  []byte  // contiguous string data
 	pos  []int   // start offsets into buf; sentinel at len(pos)-1
+	vib  []byte  // 1-byte read buffer for inline UVarint (heap-resident, no escape)
 }
 
 func NewStr(name string) *Str {
-	return &Str{name: name}
+	return &Str{name: name, vib: make([]byte, 1)}
+}
+
+// readUVarint reads a UVarint from r using c.vib (heap-resident buffer).
+// Uses r.Read directly (bufio.Reader.Read) instead of r.ReadByte (7 call frames),
+// cutting the call chain to 2 frames.
+func (c *Str) readUVarint(r *proto.Reader) (int, error) {
+	var x uint64
+	var s uint
+	for i := 0; i < 10; i++ {
+		n, err := r.Read(c.vib)
+		if n == 0 {
+			return 0, io.ErrUnexpectedEOF
+		}
+		if err != nil {
+			return 0, err
+		}
+		b := c.vib[0]
+		if b < 0x80 {
+			if i == 9 && b > 1 {
+				return 0, errors.New("uvarint overflow")
+			}
+			return int(x | uint64(b)<<s), nil
+		}
+		x |= uint64(b&0x7f) << s
+		s += 7
+	}
+	return 0, errors.New("uvarint overflow")
 }
 
 func (c *Str) Name() string { return c.name }
@@ -48,7 +78,7 @@ func (c *Str) DecodeColumn(r *proto.Reader, rows int) error {
 
 	var end int
 	for i := 0; i < rows; i++ {
-		n, err := r.StrLen()
+		n, err := c.readUVarint(r)
 		if err != nil {
 			return err
 		}
