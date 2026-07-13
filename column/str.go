@@ -8,6 +8,7 @@ import (
 	"github.com/ClickHouse/ch-go/proto"
 )
 
+// Str is a String column with contiguous buffer storage.
 type Str struct {
 	name string
 	Data []string
@@ -16,6 +17,7 @@ type Str struct {
 	vib  []byte  // 1-byte read buffer for inline UVarint (heap-resident, no escape)
 }
 
+// NewStr creates a Str column with the given column name.
 func NewStr(name string) *Str {
 	return &Str{name: name, vib: make([]byte, 1)}
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/ddukki/chu-go/dsn"
 )
 
+// ParsePoolDSN parses a clickhouse:// DSN into PoolConfig.
 func ParsePoolDSN(s string) (PoolConfig, error) {
 	r, err := dsn.Parse(s)
 	if err != nil {

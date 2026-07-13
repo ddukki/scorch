@@ -6,6 +6,7 @@ import (
 	"github.com/ddukki/chu-go/conn"
 )
 
+// PoolConfig configures a connection pool.
 type PoolConfig struct {
 	Addrs []string
 	conn.Config

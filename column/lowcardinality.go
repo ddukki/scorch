@@ -27,6 +27,7 @@ const (
 	keyUInt64 keyType = 3
 )
 
+// LowCardinality stores dict-encoded keys without expanding on decode.
 type LowCardinality[T comparable] struct {
 	Values   ColumnOf[T]
 	dict     []T    // unique keys
@@ -49,6 +50,7 @@ func (c *LowCardinality[T]) key(i int) int {
 	return 0
 }
 
+// NewLowCardinality wraps a column into a LowCardinality column.
 func NewLowCardinality[T comparable](col ColumnOf[T]) *LowCardinality[T] {
 	return &LowCardinality[T]{Values: col}
 }

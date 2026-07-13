@@ -7,15 +7,20 @@ import (
 	"github.com/ClickHouse/ch-go/proto"
 )
 
+// Compression is a ClickHouse wire compression mode.
 type Compression = proto.Compression
 
 const (
+	// CompressionDisabled disables wire compression.
 	CompressionDisabled = proto.CompressionDisabled
+	// CompressionEnabled enables LZ4 wire compression.
 	CompressionEnabled  = proto.CompressionEnabled
 )
 
+// Setting is a ClickHouse query setting.
 type Setting = proto.Setting
 
+// Config configures a ClickHouse native-protocol connection.
 type Config struct {
 	Addr         string
 	User         string

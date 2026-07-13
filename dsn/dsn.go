@@ -12,6 +12,7 @@ import (
 	"github.com/ClickHouse/ch-go/proto"
 )
 
+// Config stores the result of parsing a ClickHouse DSN.
 type Config struct {
 	Addrs               []string
 	User                string
@@ -30,14 +31,19 @@ type Config struct {
 	HealthCheckInterval time.Duration
 }
 
+// ErrorKind classifies a DSN parse error.
 type ErrorKind int
 
 const (
+	// KindParse is a DSN parse error.
 	KindParse    ErrorKind = iota
+	// KindSecurity is a security validation error.
 	KindSecurity
+	// KindScheme is an unsupported URL scheme error.
 	KindScheme
 )
 
+// Error is a DSN parse error with a Kind and optional wrapped error.
 type Error struct {
 	Kind    ErrorKind
 	Message string
@@ -53,6 +59,7 @@ func (e *Error) Error() string {
 
 func (e *Error) Unwrap() error { return e.Err }
 
+// Parse parses a clickhouse:// DSN string into Config.
 func Parse(dsn string) (Config, error) {
 	const maxFieldBytes = 1024
 	const maxHosts = 100
@@ -202,6 +209,7 @@ func containsControlChars(s string) bool {
 	return false
 }
 
+// SanitizeForError removes control characters from a string for safe display.
 func SanitizeForError(s string) string {
 	var b strings.Builder
 	b.Grow(len(s))

@@ -7,6 +7,7 @@ import (
 	"github.com/ddukki/chu-go/dsn"
 )
 
+// ParseDSN parses a ClickHouse DSN into Config.
 func ParseDSN(s string) (Config, error) {
 	r, err := dsn.Parse(s)
 	if err != nil {

@@ -6,11 +6,13 @@ import (
 	"github.com/ClickHouse/ch-go/proto"
 )
 
+// DateTime is a DateTime column (stored as UInt32).
 type DateTime struct {
 	name string
 	Data []uint32
 }
 
+// NewDateTime creates a DateTime column with the given column name.
 func NewDateTime(name string) *DateTime {
 	return &DateTime{name: name}
 }

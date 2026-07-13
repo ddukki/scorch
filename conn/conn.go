@@ -10,15 +10,22 @@ import (
 	"github.com/ClickHouse/ch-go/proto"
 )
 
+// State represents the connection lifecycle state.
 type State int
 
 const (
+	// StateInitial is the zero state before connecting.
 	StateInitial State = iota
+	// StateReady means an idle, connected connection.
 	StateReady
+	// StateBusy means a connection is executing a query.
 	StateBusy
+	// StateClosed means the connection has been closed.
 	StateClosed
 )
 
+// Conn is a single ClickHouse native-protocol connection.
+// Not safe for concurrent use — at most one query at a time.
 type Conn struct {
 	mu    sync.Mutex
 	state State
@@ -39,6 +46,7 @@ type Conn struct {
 	OnLog          func(proto.Log)
 }
 
+// Connect opens a new ClickHouse native-protocol connection.
 func Connect(ctx context.Context, cfg Config) (*Conn, error) {
 	c := &Conn{
 		state: StateBusy,

@@ -18,6 +18,7 @@ type addrPool struct {
 	p    *puddle.Pool[*conn.Conn]
 }
 
+// ConnState reports pool connection counts.
 type ConnState struct {
 	Total   int
 	Idle    int
@@ -25,12 +26,14 @@ type ConnState struct {
 	Waiting int
 }
 
+// AddrState reports pool state for one address.
 type AddrState struct {
 	Addr string
 	ConnState
 	Dead bool
 }
 
+// Pool is a round-robin connection pool with health checks.
 type Pool struct {
 	mu     sync.Mutex
 	cfg    PoolConfig
@@ -40,6 +43,7 @@ type Pool struct {
 	stopCh chan struct{}
 }
 
+// New creates a Pool, connecting to each configured address.
 func New(ctx context.Context, cfg PoolConfig) (*Pool, error) {
 	addrs := cfg.Addrs
 	if len(addrs) == 0 {

@@ -6,11 +6,13 @@ import (
 	"github.com/ClickHouse/ch-go/proto"
 )
 
+// Nullable wraps a ColumnOf with a null bitmap.
 type Nullable[T any] struct {
 	Values ColumnOf[T]
 	Nulls  []bool
 }
 
+// NewNullable wraps a column into a Nullable column.
 func NewNullable[T any](col ColumnOf[T]) *Nullable[T] {
 	return &Nullable[T]{Values: col}
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/ClickHouse/ch-go/proto"
 )
 
+// SelectStream reads query results block by block.
 type SelectStream struct {
 	c       *Conn
 	ctx     context.Context
@@ -22,6 +23,7 @@ type SelectStream struct {
 	blockRows int
 }
 
+// InsertStream incrementally writes data blocks in one INSERT.
 type InsertStream struct {
 	c       *Conn
 	ctx     context.Context

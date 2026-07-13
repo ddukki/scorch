@@ -19,6 +19,7 @@ func safeMul(rows, elemSize int) (int, error) {
 	return rows * elemSize, nil
 }
 
+// Column is the interface that all columns implement.
 type Column interface {
 	Name() string
 	Type() proto.ColumnType
@@ -28,6 +29,7 @@ type Column interface {
 	WriteColumn(w *proto.Writer)
 }
 
+// ColumnOf extends Column with element access for typed columns.
 type ColumnOf[T any] interface {
 	Column
 	Append(v T)
@@ -35,11 +37,13 @@ type ColumnOf[T any] interface {
 	Row(i int) T
 }
 
+// Base is a generic fixed-width column (UInt64, Float64, etc.).
 type Base[T any] struct {
 	name string
 	Data []T
 }
 
+// NewBase creates a Base column with the given column name.
 func NewBase[T any](name string) *Base[T] {
 	return &Base[T]{name: name}
 }
