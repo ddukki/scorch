@@ -35,6 +35,7 @@ type Of[T any] interface {
 	Append(v T)
 	AppendArr(v []T)
 	Row(i int) T
+	Reset()
 }
 
 // Base is a generic fixed-width column (UInt64, Float64, etc.).
@@ -62,6 +63,9 @@ func (c *Base[T]) AppendArr(v []T) { c.Data = append(c.Data, v...) }
 
 // Row returns the value at index i.
 func (c *Base[T]) Row(i int) T { return c.Data[i] }
+
+// Reset clears the column data without releasing the backing array.
+func (c *Base[T]) Reset() { c.Data = c.Data[:0] }
 
 // Type returns the column's ClickHouse wire type.
 func (c *Base[T]) Type() proto.ColumnType {

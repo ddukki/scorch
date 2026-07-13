@@ -84,15 +84,9 @@ func (c *LowCardinality[T]) ensureExpanded() {
 		return
 	}
 	if len(c.dict) == 0 {
-		// No dictionary — data was inserted directly via c.Values (insert path)
 		return
 	}
-	switch v := any(c.Values).(type) {
-	case *Str:
-		v.Data = v.Data[:0]
-	case *Base[T]:
-		v.Data = v.Data[:0]
-	}
+	c.Values.Reset()
 	n := len(c.keys) / c.keyWidth
 	for i := 0; i < n; i++ {
 		c.Values.Append(c.dict[c.key(i)])

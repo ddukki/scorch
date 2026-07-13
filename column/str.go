@@ -67,6 +67,9 @@ func (c *Str) AppendArr(v []string) { c.Data = append(c.Data, v...) }
 // Row returns the value at index i.
 func (c *Str) Row(i int) string { return c.Data[i] }
 
+// Reset clears the column data without releasing the backing array.
+func (c *Str) Reset() { c.Data = c.Data[:0] }
+
 // DecodeColumn decodes string rows from the wire protocol.
 func (c *Str) DecodeColumn(r *proto.Reader, rows int) error {
 	if rows == 0 {
