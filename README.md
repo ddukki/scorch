@@ -8,22 +8,22 @@ go get github.com/ddukki/scorch
 
 ## Why
 
-scorch is inspired by **[chconn](https://github.com/vahid-sohrabloo/chconn)** — the first Go client to prove generic columns over ClickHouse native protocol. chconn showed that Go 1.18 generics could eliminate per-type column structs and that single-allocation column decode (one `make([]T, rows)` per column) is dramatically faster than per-element append (35 vs 6683 allocs on 100M UInt64 reads).
+scorch is inspired by **[chconn](https://github.com/vahid-sohrabloo/chconn)**, the first Go client to prove generic columns over ClickHouse native protocol. chconn showed that Go 1.18 generics could eliminate per-type column structs and that single-allocation column decode (one `make([]T, rows)` per column) is dramatically faster than per-element append (35 vs 6683 allocs on 100M UInt64 reads).
 
 We wanted chconn's generic column API, but we also wanted the protocol reliability, fuzz testing, and active maintenance of **[ch-go](https://github.com/ClickHouse/ch-go)**. Rather than compromise on either, scorch combines both:
 
-- **Generic columns like chconn** — `Base[T]`, `Str`, `Nullable[T]`, `LowCardinality[T]`, Tuple2–Tuple12.
-- **Protocol from ch-go** — ch-go's wire layer is battle-tested with fuzz, golden, and e2e protocol tests. We don't reimplement the protocol.
-- **Safe decode** — one `make([]T, rows)` allocation per column, direct `ReadFull` into the backing array. `Data` is always valid — no reader-buffer expiry, no corruption.
-- **Error returns, not panics** — overflow, bounds, and protocol violations are safe by construction.
-- **Fuzz + e2e tests from day one** — protocol-level fuzz tests, ch-go cross-verification, testcontainers-based e2e.
-- **Built-in pool** — puddle-based connection pool with health checks, dead replica detection, configurable concurrency.
+- **Generic columns like chconn**: `Base[T]`, `Str`, `Nullable[T]`, `LowCardinality[T]`, Tuple2–Tuple12.
+- **Protocol from ch-go**: ch-go's wire layer is battle-tested with fuzz, golden, and e2e protocol tests. We don't reimplement the protocol.
+- **Safe decode**: one `make([]T, rows)` allocation per column, direct `ReadFull` into the backing array. `Data` is always valid, no reader-buffer expiry, no corruption.
+- **Error returns, not panics**: overflow, bounds, and protocol violations are safe by construction.
+- **Fuzz + e2e tests from day one**: protocol-level fuzz tests, ch-go cross-verification, testcontainers-based e2e.
+- **Built-in pool**: puddle-based connection pool with health checks, dead replica detection, configurable concurrency.
 
 Other clients for context:
 
-- **[ch-go](https://github.com/ClickHouse/ch-go)** — wire-level primitives, one `Do(ctx, Query{})` method, concrete column types per wire format. Excellent protocol tests but verbose column API.
-- **[clickhouse-go](https://github.com/ClickHouse/clickhouse-go)** — struct-tag mapping, query builder, ORM-like API. Convenient for row-oriented code, heavy when you need column-level control.
-- **[chconn](https://github.com/vahid-sohrabloo/chconn)** — Generic native-protocol columns. Pioneered the column-oriented generics approach scorch builds on.
+- **[ch-go](https://github.com/ClickHouse/ch-go)**: wire-level primitives, one `Do(ctx, Query{})` method, concrete column types per wire format. Excellent protocol tests but verbose column API.
+- **[clickhouse-go](https://github.com/ClickHouse/clickhouse-go)**: struct-tag mapping, query builder, ORM-like API. Convenient for row-oriented code, heavy when you need column-level control.
+- **[chconn](https://github.com/vahid-sohrabloo/chconn)**: Generic native-protocol columns. Pioneered the column-oriented generics approach scorch builds on.
 
 If you want raw protocol access, use ch-go. If you want ORM-style struct mapping, use clickhouse-go. If you want generic columns over native protocol with active maintenance, use scorch.
 
@@ -281,15 +281,15 @@ Missing types (open an issue or PR): Decimal, Date, DateTime, Array, Map, IPv4, 
 
 ## Performance
 
-scorch leads or ties all major select benchmarks vs ch-go, clickhouse-go, and chconn v2 — including **lowest allocations** of any driver on wide-table selects. Full results at [scorch-bench/BENCHMARKS.md](https://github.com/ddukki/scorch-bench/blob/main/BENCHMARKS.md).
+scorch leads or ties all major select benchmarks vs ch-go, clickhouse-go, and chconn v2, including **lowest allocations** of any driver on wide-table selects. Full results at [scorch-bench/BENCHMARKS.md](https://github.com/ddukki/scorch-bench/blob/main/BENCHMARKS.md).
 
 ### Select benchmarks
 
 All select tests read from a local ClickHouse instance (testcontainers, Docker Desktop). Data is pre-inserted before the timed loop. Each result is the fastest of multiple runs after warmup.
 
-#### Wide — 52-column table
+#### Wide: 52-column table
 
-Schema: `id UInt64` + 50× `Float64` + `label String`. Tests decode throughput for wide tables — common in analytics and time-series workloads.
+Schema: `id UInt64` + 50× `Float64` + `label String`. Tests decode throughput for wide tables, common in analytics and time-series workloads.
 
 Rows are verified by ID range (`WHERE id BETWEEN 0 AND N-1`) and cross-referenced against seed data.
 
@@ -300,11 +300,11 @@ Rows are verified by ID range (`WHERE id BETWEEN 0 AND N-1`) and cross-reference
 | ch-go | 60ms | 476ms | 1669 | 13216 |
 | clickhouse-go | 80ms | 762ms | 103325 | 1027434 |
 
-scorch leads all drivers on allocations — 34% fewer than chconn at 100K (180 vs 273), 15% fewer at 1M (235 vs 278). Timing is within Docker Desktop noise (±9%). clickhouse-go's reflection-based column binding drives 500× more allocations.
+scorch leads all drivers on allocations: 34% fewer than chconn at 100K (180 vs 273), 15% fewer at 1M (235 vs 278). Timing is within Docker Desktop noise (±9%). clickhouse-go's reflection-based column binding drives 500× more allocations.
 
-#### Nullable — Nullable(UInt64) + Nullable(String)
+#### Nullable: Nullable(UInt64) + Nullable(String)
 
-Tests Nullable column decode — relevant for any table with optional fields, sparse data, or migrations where columns may be null.
+Tests Nullable column decode, relevant for any table with optional fields, sparse data, or migrations where columns may be null.
 
 Both `Nulls` bitmap and inner column `Data` are decoded and verified.
 
@@ -317,11 +317,11 @@ Both `Nulls` bitmap and inner column `Data` are decoded and verified.
 
 scorch leads all drivers at both row counts. The gap comes from chconn's per-element `Read` on the inner column vs scorch's bulk `DecodeColumn` into the backing array. clickhouse-go allocates per-element `*T` pointers, driving GC overhead.
 
-#### LowCardinality — cardinality 100
+#### LowCardinality: cardinality 100
 
 Schema: `tag LowCardinality(String)` populated from 100 distinct values across 100K/1M rows. Tests the common pattern of low-cardinality string columns (status codes, categories, tiers).
 
-No expansion on decode — scorch stores dict + keys and resolves on read.
+No expansion on decode; scorch stores dict + keys and resolves on read.
 
 | Driver | 100K rows | 1M rows |
 |--------|-----------|---------|
@@ -334,7 +334,7 @@ scorch leads by 1.5–4×. The lazy decode preserves the wire-format dict + narr
 
 ### Insert benchmarks
 
-#### InsertNarrow — 4-column single-block insert
+#### InsertNarrow: 4-column single-block insert
 
 Schema: `id UInt64, ts DateTime, value Float64, label String`. All rows in one INSERT block. Tests pure insert throughput for narrow tables.
 
@@ -345,9 +345,9 @@ Schema: `id UInt64, ts DateTime, value Float64, label String`. All rows in one I
 | clickhouse-go | 88ms | 135ms |
 | chconn v2 | 114ms | 129ms |
 
-All four drivers cluster within ~10% at 1M rows. Single-block inserts are network-throughput-bound — the wire format overhead dominates, not the driver.
+All four drivers cluster within ~10% at 1M rows. Single-block inserts are network-throughput-bound; the wire format overhead dominates, not the driver.
 
-#### Batch Insert — convergence at batch=500
+#### Batch Insert: convergence at batch=500
 
 Tests the same 4-column narrow table with 1000 total rows split across varying batch sizes. Shows how batch granularity affects throughput.
 
@@ -358,17 +358,17 @@ Tests the same 4-column narrow table with 1000 total rows split across varying b
 | 100 (10 inserts) | 0.61s | 0.61s | 0.61s | 1.02s |
 | 500 (2 inserts) | 0.20s | 0.20s | 0.20s | 0.20s |
 
-ch-go, scorch, and clickhouse-go are identical at every batch size — they all use the same buffered-column encoding strategy. chconn v2 is 68% slower at batch=10, converging at batch=500.
+ch-go, scorch, and clickhouse-go are identical at every batch size; they all use the same buffered-column encoding strategy. chconn v2 is 68% slower at batch=10, converging at batch=500.
 
-**Why chconn is slower at small batches:** chconn sends column headers and column data as separate `WriteTo` calls on the raw `net.Conn` — at minimum 11+ TCP writes per Insert vs ~2 for the others. On Windows, each extra syscall adds ~40ms overhead. At batch=500 (2 inserts total) the overhead drops below measurement noise.
+**Why chconn is slower at small batches:** chconn sends column headers and column data as separate `WriteTo` calls on the raw `net.Conn`; at minimum 11+ TCP writes per Insert vs ~2 for the others. On Windows, each extra syscall adds ~40ms overhead. At batch=500 (2 inserts total) the overhead drops below measurement noise.
 
 **Key takeaway:** Batch granularity matters more than driver choice above ~100 rows. Use batches ≥500 for maximum throughput regardless of driver.
 
 ### Allocations
 
-scorch leads all drivers on allocations for wide-table selects — 180 allocs/op at 100K rows, 235 at 1M (vs chconn's 273/278). This comes from two optimizations:
+scorch leads all drivers on allocations for wide-table selects: 180 allocs/op at 100K rows, 235 at 1M (vs chconn's 273/278). This comes from two optimizations:
 
-1. **Cached skip-block results.** Server profile-events/log/totals blocks are parsed once per block type via `proto.Results.Auto()`, then reused on subsequent calls. No fresh `ColAuto` columns per skip — ~82% of remaining allocs eliminated.
+1. **Cached skip-block results.** Server profile-events/log/totals blocks are parsed once per block type via `proto.Results.Auto()`, then reused on subsequent calls. No fresh `ColAuto` columns per skip; ~82% of remaining allocs eliminated.
 2. **Capacity doubling on column decode.** `Base[T].Data`, `Str.Data`/`Str.pos`, and `Nullable.Nulls` allocate with `2×` capacity on growth. After warmup, the first full block's allocation absorbs all subsequent blocks. ~18% of remaining allocs eliminated.
 
 Combined, these bring scorch below chconn on allocations at both 100K and 1M row counts.
@@ -377,7 +377,7 @@ Combined, these bring scorch below chconn on allocations at both 100K and 1M row
 
 #### Column Reuse
 
-**Anti-pattern — allocating inside a loop:**
+**Anti-pattern**: allocating inside a loop:
 ```go
 // SLOW: each iteration allocates a fresh column + backing array
 for i := 0; i < b.N; i++ {
@@ -386,7 +386,7 @@ for i := 0; i < b.N; i++ {
 }
 ```
 
-**Correct — allocate once, reset between iterations:**
+**Correct**: allocate once, reset between iterations:
 ```go
 // FAST: capacity is reused across iterations
 col := column.NewBase[uint64]("id")
@@ -400,7 +400,7 @@ All column types reuse backing array capacity on `.Data = .Data[:0]`. A single d
 
 ### String Columns
 
-scorch's `Str` stores all string data in a contiguous `[]byte` buffer. After decode, `Data[i]` is a string header pointing into that buffer — zero per-string allocation.
+scorch's `Str` stores all string data in a contiguous `[]byte` buffer. After decode, `Data[i]` is a string header pointing into that buffer, zero per-string allocation.
 
 **Access through `Data` or `Row(i)`:**
 ```go
@@ -415,9 +415,9 @@ for i := 0; i < outName.Len(); i++ { _ = outName.Row(i) }
 
 ### LowCardinality Access
 
-After decode, `LowCardinality` stores dict + keys without materializing into the inner column. `Row(i)` resolves `O(1)` from `dict[keys[i]]` — no allocation.
+After decode, `LowCardinality` stores dict + keys without materializing into the inner column. `Row(i)` resolves `O(1)` from `dict[keys[i]]`, no allocation.
 
-**Use `Row(i)` for random access — O(1), no materialization cost:**
+**Use `Row(i)` for random access**: O(1), no materialization cost.
 ```go
 lc := column.NewLowCardinality(column.NewStr("tag"))
 c.Select(ctx, query, lc)
@@ -433,7 +433,7 @@ c.Select(ctx, query, lc)
 allTags := lc.Values.Data  // triggers materialization (dict → []string)
 ```
 
-Materialization copies all values from dict + keys into the inner column. This allocates once and is cached — subsequent access is free. `EncodeColumn` and `WriteColumn` also trigger materialization automatically.
+Materialization copies all values from dict + keys into the inner column. This allocates once and is cached; subsequent access is free. `EncodeColumn` and `WriteColumn` also trigger materialization automatically.
 
 **Insert path unaffected:** `lc.Append(val)` writes directly to `Values`, never touches dict/keys.
 
@@ -462,7 +462,7 @@ for i := 0; i < b.N; i++ {
 
 ### Batch Insert
 
-Use batches of ≥500 rows. Single-block inserts are network-throughput-bound, not driver-bound — all four Go drivers cluster within ~12% at 1M rows.
+Use batches of ≥500 rows. Single-block inserts are network-throughput-bound, not driver-bound; all four Go drivers cluster within ~12% at 1M rows.
 
 ```go
 col := column.NewBase[uint64]("id")
