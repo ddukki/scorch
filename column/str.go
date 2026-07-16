@@ -2,6 +2,7 @@ package column
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"unsafe"
 
@@ -55,6 +56,13 @@ func (c *StrColumn) Name() string { return c.name }
 // Type returns proto.ColumnTypeString.
 func (c *StrColumn) Type() proto.ColumnType { return proto.ColumnTypeString }
 
+func (c *StrColumn) Infer(t proto.ColumnType) error {
+	if t.Base() != proto.ColumnTypeString {
+		return fmt.Errorf("StrColumn: expected String, got %q", t.Base())
+	}
+	return nil
+}
+
 // Len returns the number of elements in the column.
 func (c *StrColumn) Len() int { return len(c.Data) }
 
@@ -66,6 +74,7 @@ func (c *StrColumn) AppendArr(v []string) { c.Data = append(c.Data, v...) }
 
 // Row returns the value at index i.
 func (c *StrColumn) Row(i int) string { return c.Data[i] }
+func (c *StrColumn) DataSlice(start, end int) []string { return c.Data[start:end] }
 
 // Reset clears the column data without releasing the backing array.
 func (c *StrColumn) Reset() { c.Data = c.Data[:0] }

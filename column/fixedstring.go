@@ -53,6 +53,7 @@ func (c *FixedStringColumn) AppendArr(v [][]byte) {
 }
 
 func (c *FixedStringColumn) Row(i int) []byte { return c.Data[i] }
+func (c *FixedStringColumn) DataSlice(start, end int) [][]byte { return c.Data[start:end] }
 
 func (c *FixedStringColumn) Reset() { c.Data = c.Data[:0] }
 

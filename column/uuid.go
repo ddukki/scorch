@@ -1,6 +1,7 @@
 package column
 
 import (
+	"fmt"
 	"unsafe"
 
 	"github.com/ClickHouse/ch-go/proto"
@@ -26,6 +27,12 @@ func (c *UUIDColumn) Name() string { return c.name }
 
 // Type returns proto.ColumnTypeUUID.
 func (c *UUIDColumn) Type() proto.ColumnType { return proto.ColumnTypeUUID }
+func (c *UUIDColumn) Infer(t proto.ColumnType) error {
+	if t.Base() != proto.ColumnTypeUUID {
+		return fmt.Errorf("UUIDColumn: expected UUID, got %q", t.Base())
+	}
+	return nil
+}
 
 // Len returns the number of elements in the column.
 func (c *UUIDColumn) Len() int { return len(c.Data) }
@@ -41,6 +48,7 @@ func (c *UUIDColumn) AppendArr(vs []UUID) { c.Data = append(c.Data, vs...) }
 
 // Row returns the UUID at index i.
 func (c *UUIDColumn) Row(i int) UUID { return c.Data[i] }
+func (c *UUIDColumn) DataSlice(start, end int) []UUID { return c.Data[start:end] }
 
 // DecodeColumn decodes UUID rows from the wire protocol.
 func (c *UUIDColumn) DecodeColumn(r *proto.Reader, rows int) error {

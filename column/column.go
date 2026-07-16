@@ -38,6 +38,13 @@ type Of[T any] interface {
 	Reset()
 }
 
+// SliceAccessor provides zero-copy sub-slice access to backing Data.
+// Implemented by types where Go T matches the backing slice element type.
+// Not implemented by Enum, Decimal (backing type differs from T).
+type SliceAccessor[T any] interface {
+	DataSlice(start, end int) []T
+}
+
 // BaseColumn is a generic fixed-width column (UInt64, Float64, etc.).
 type BaseColumn[T any] struct {
 	name string
@@ -63,6 +70,15 @@ func (c *BaseColumn[T]) AppendArr(v []T) { c.Data = append(c.Data, v...) }
 
 // Row returns the value at index i.
 func (c *BaseColumn[T]) Row(i int) T { return c.Data[i] }
+func (c *BaseColumn[T]) DataSlice(start, end int) []T { return c.Data[start:end] }
+
+// Infer validates that t matches this column's fixed type.
+func (c *BaseColumn[T]) Infer(t proto.ColumnType) error {
+	if t != c.Type() {
+		return fmt.Errorf("BaseColumn: expected type %s, got %s", c.Type(), t)
+	}
+	return nil
+}
 
 // Reset clears the column data without releasing the backing array.
 func (c *BaseColumn[T]) Reset() { c.Data = c.Data[:0] }

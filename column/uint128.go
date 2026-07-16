@@ -97,11 +97,18 @@ func NewUInt128Column(name string) *UInt128Column {
 
 func (c *UInt128Column) Name() string                        { return c.name }
 func (c *UInt128Column) Type() proto.ColumnType               { return proto.ColumnTypeUInt128 }
+func (c *UInt128Column) Infer(t proto.ColumnType) error {
+	if t.Base() != proto.ColumnTypeUInt128 {
+		return fmt.Errorf("UInt128Column: expected UInt128, got %q", t.Base())
+	}
+	return nil
+}
 func (c *UInt128Column) Len() int                             { return len(c.Data) }
 func (c *UInt128Column) Append(v UInt128)                      { c.Data = append(c.Data, v) }
 func (c *UInt128Column) AppendArr(v []UInt128)                  { c.Data = append(c.Data, v...) }
 func (c *UInt128Column) Row(i int) UInt128                      { return c.Data[i] }
-func (c *UInt128Column) Reset()                               { c.Data = c.Data[:0] }
+func (c *UInt128Column) DataSlice(start, end int) []UInt128     { return c.Data[start:end] }
+func (c *UInt128Column) Reset()                                 { c.Data = c.Data[:0] }
 
 func (c *UInt128Column) DecodeColumn(r *proto.Reader, rows int) error {
 	return decodeFixed(r, rows, 16, &c.Data)

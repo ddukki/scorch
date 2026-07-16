@@ -72,11 +72,18 @@ func NewUInt256Column(name string) *UInt256Column {
 
 func (c *UInt256Column) Name() string                        { return c.name }
 func (c *UInt256Column) Type() proto.ColumnType               { return proto.ColumnTypeUInt256 }
+func (c *UInt256Column) Infer(t proto.ColumnType) error {
+	if t.Base() != proto.ColumnTypeUInt256 {
+		return fmt.Errorf("UInt256Column: expected UInt256, got %q", t.Base())
+	}
+	return nil
+}
 func (c *UInt256Column) Len() int                             { return len(c.Data) }
 func (c *UInt256Column) Append(v UInt256)                      { c.Data = append(c.Data, v) }
 func (c *UInt256Column) AppendArr(v []UInt256)                  { c.Data = append(c.Data, v...) }
 func (c *UInt256Column) Row(i int) UInt256                      { return c.Data[i] }
-func (c *UInt256Column) Reset()                               { c.Data = c.Data[:0] }
+func (c *UInt256Column) DataSlice(start, end int) []UInt256     { return c.Data[start:end] }
+func (c *UInt256Column) Reset()                                 { c.Data = c.Data[:0] }
 
 func (c *UInt256Column) DecodeColumn(r *proto.Reader, rows int) error {
 	return decodeFixed(r, rows, 32, &c.Data)
