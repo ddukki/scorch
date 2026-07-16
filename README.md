@@ -250,11 +250,24 @@ is.Bind(col); is.Append(); is.Close()
 | Int8, Int16, Int32, Int64 | `int8, int16, int32, int64` | `NewBase[T]("name")` |
 | Float32, Float64 | `float32, float64` | `NewBase[T]("name")` |
 | String | `string` | `NewStr("name")` |
+| FixedString(N) | `[]byte` | `NewFixedStringColumn("name", n)` |
+| Int128, Int256 | `Int128`, `Int256` | `NewInt128Column("name")` |
+| UInt128, UInt256 | `UInt128`, `UInt256` | `NewUInt128Column("name")` |
+| Enum8, Enum16 | `string` | `NewEnum8Column("name")` |
+| Date | `time.Time` | `NewDateColumn("name")` |
+| Date32 | `time.Time` | `NewDate32Column("name")` |
+| DateTime | `time.Time` | `NewDateTimeColumn("name")` |
+| DateTime64 | `time.Time` | `NewDateTime64Column("name", precision)` |
+| Decimal32/64/128/256 | `decimal.Decimal` | `NewDecimal32Column("name")` |
+| IPv4, IPv6 | `net.IP` | `NewIPv4Column("name")` |
+| UUID | `UUID` | `NewUUIDColumn("name")` |
+| Array(T) | `[]T` | `NewArrayColumn("name", elem)` |
+| Map(K, V) | `[]MapEntry[K,V]` | `NewMapColumn[K,V]("name")` |
 | Nullable(T) | `(T, bool)` | `NewNullable[T](inner)` |
 | LowCardinality(T) | `T` (deduplicated) | `NewLowCardinality[T](inner)` |
 | Tuple(T1..T12) | `Tuple2Value[T1,T2]` etc. | `NewTuple2(col1, col2)` |
 
-Missing types (open an issue or PR): Decimal, Date, DateTime, Array, Map, IPv4, IPv6, UUID, Enum, Geo types.
+Missing types (open an issue or PR): Geo types (Point, Ring, Polygon, MultiPolygon).
 
 ## Compared to ch-go
 
